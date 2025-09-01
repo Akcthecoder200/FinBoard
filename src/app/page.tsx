@@ -2,12 +2,17 @@
 
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
+import { WidgetContainer } from '@/components/widgets/WidgetContainer';
+import { useWidgetPersistence } from '@/hooks/useWidgetPersistence';
 import { useState, useEffect } from 'react';
 
 export default function Home() {
   const widgets = useSelector((state: RootState) => state.widgets.widgets);
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [mounted, setMounted] = useState(false);
+
+  // Initialize widget persistence
+  useWidgetPersistence();
 
   // Load saved theme on mount
   useEffect(() => {
@@ -222,29 +227,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-card p-6 rounded-lg border border-border">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Portfolio Performance</h3>
-              <div className="h-64 bg-secondary/20 rounded-lg flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-4xl mb-2">📊</div>
-                  <p>Chart widget placeholder</p>
-                  <p className="text-sm">Will integrate Recharts in next step</p>
-                </div>
-              </div>
+          {/* Widgets Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Dashboard Widgets</h3>
+              <span className="text-sm text-muted-foreground">Customize your dashboard</span>
             </div>
-
-            <div className="bg-card p-6 rounded-lg border border-border">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Market Overview</h3>
-              <div className="h-64 bg-secondary/20 rounded-lg flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <div className="text-4xl mb-2">📈</div>
-                  <p>Market data widget</p>
-                  <p className="text-sm">Coming in widget system step</p>
-                </div>
-              </div>
-            </div>
+            <WidgetContainer />
           </div>
 
           {/* Status Card */}
