@@ -9,6 +9,8 @@
   --primary-foreground: #f8fafc;
   --secondary: #f1f5f9;
   --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #0f172a;
@@ -24,6 +26,8 @@
   --primary-foreground: #0f172a;
   --secondary: #262626;
   --secondary-foreground: #f8fafc;
+  --muted: #262626;
+  --muted-foreground: #94a3b8;
   --border: #404040;
   --input: #404040;
   --ring: #f8fafc;
@@ -38,6 +42,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

@@ -46,86 +46,231 @@ export default function Home() {
 
   // Get effective theme for display
   const getEffectiveTheme = () => {
-    if (typeof window === 'undefined') return 'light'; // SSR fallback
+    if (typeof window === 'undefined') return 'light';
     if (currentTheme === 'system') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return currentTheme;
   };
 
-  // Don't render theme-dependent content until mounted to prevent hydration mismatch
+  // Don't render theme-dependent content until mounted
   if (!mounted) {
     return (
-      <div className="min-h-screen p-8">
-        <header className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">FinBoard</h1>
-          <div className="flex gap-2">
-            <div className="px-3 py-1 rounded bg-secondary">Loading...</div>
+      <div className="flex h-screen bg-background">
+        <div className="w-64 bg-card border-r border-border p-4">
+          <div className="h-8 bg-secondary rounded animate-pulse"></div>
+        </div>
+        <div className="flex-1 p-6">
+          <div className="h-8 bg-secondary rounded animate-pulse mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="h-48 bg-secondary rounded animate-pulse"></div>
+            <div className="h-48 bg-secondary rounded animate-pulse"></div>
+            <div className="h-48 bg-secondary rounded animate-pulse"></div>
           </div>
-        </header>
-        <main>
-          <div className="bg-card p-6 rounded-lg border">
-            <h2 className="text-xl font-semibold mb-4">Loading Dashboard...</h2>
-          </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">FinBoard</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleThemeChange('light')}
-            className={`px-3 py-1 rounded transition-colors ${
-              currentTheme === 'light' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-secondary hover:bg-secondary/80'
-            }`}
-          >
-            Light
-          </button>
-          <button
-            onClick={() => handleThemeChange('dark')}
-            className={`px-3 py-1 rounded transition-colors ${
-              currentTheme === 'dark' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-secondary hover:bg-secondary/80'
-            }`}
-          >
-            Dark
-          </button>
-          <button
-            onClick={() => handleThemeChange('system')}
-            className={`px-3 py-1 rounded transition-colors ${
-              currentTheme === 'system' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-secondary hover:bg-secondary/80'
-            }`}
-          >
-            System
-          </button>
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <div className="w-64 bg-card border-r border-border flex flex-col">
+        <div className="p-6 border-b border-border">
+          <h1 className="text-2xl font-bold text-foreground">FinBoard</h1>
+          <p className="text-sm text-muted-foreground">Finance Dashboard</p>
         </div>
-      </header>
+        
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 text-foreground bg-primary/10 rounded-lg">
+                <span className="w-5 h-5 mr-3">📊</span>
+                Dashboard
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg">
+                <span className="w-5 h-5 mr-3">💰</span>
+                Portfolio
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg">
+                <span className="w-5 h-5 mr-3">📈</span>
+                Markets
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg">
+                <span className="w-5 h-5 mr-3">📰</span>
+                News
+              </a>
+            </li>
+            <li>
+              <a href="#" className="flex items-center px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg">
+                <span className="w-5 h-5 mr-3">⚙️</span>
+                Settings
+              </a>
+            </li>
+          </ul>
+        </nav>
 
-      <main>
-        <div className="bg-card p-6 rounded-lg border">
-          <h2 className="text-xl font-semibold mb-4">Dashboard Status</h2>
-          <p className="text-card-foreground">
-            Current theme: <span className="font-mono">{getEffectiveTheme()}</span>
-          </p>
-          <p className="text-card-foreground">
-            Theme setting: <span className="font-mono">{currentTheme}</span>
-          </p>
-          <p className="text-card-foreground">
-            Widgets count: <span className="font-mono">{widgets.length}</span>
-          </p>
-          <p className="text-green-600 mt-2">✅ Project setup complete!</p>
-          <p className="text-blue-600 mt-1">🎨 Theme toggle is working!</p>
+        <div className="p-4 border-t border-border">
+          <div className="text-sm text-muted-foreground mb-2">Theme</div>
+          <div className="flex gap-1">
+            <button
+              onClick={() => handleThemeChange('light')}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                currentTheme === 'light' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-secondary hover:bg-secondary/80'
+              }`}
+            >
+              Light
+            </button>
+            <button
+              onClick={() => handleThemeChange('dark')}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                currentTheme === 'dark' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-secondary hover:bg-secondary/80'
+              }`}
+            >
+              Dark
+            </button>
+            <button
+              onClick={() => handleThemeChange('system')}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                currentTheme === 'system' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-secondary hover:bg-secondary/80'
+              }`}
+            >
+              Auto
+            </button>
+          </div>
         </div>
-      </main>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="bg-card border-b border-border px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Dashboard Overview</h2>
+              <p className="text-sm text-muted-foreground">Monitor your financial portfolio</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                Theme: <span className="font-mono">{getEffectiveTheme()}</span>
+              </div>
+              <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                + Add Widget
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Dashboard Content */}
+        <main className="flex-1 overflow-auto p-6">
+          {/* Stats Row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-card p-6 rounded-lg border border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Balance</p>
+                  <p className="text-2xl font-bold text-foreground">$24,532.50</p>
+                </div>
+                <div className="text-green-500">📈</div>
+              </div>
+              <p className="text-sm text-green-500 mt-2">+2.5% from yesterday</p>
+            </div>
+
+            <div className="bg-card p-6 rounded-lg border border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Today&apos;s Gain</p>
+                  <p className="text-2xl font-bold text-green-500">+$342.15</p>
+                </div>
+                <div className="text-green-500">💰</div>
+              </div>
+              <p className="text-sm text-green-500 mt-2">+1.4% gain</p>
+            </div>
+
+            <div className="bg-card p-6 rounded-lg border border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Investments</p>
+                  <p className="text-2xl font-bold text-foreground">12</p>
+                </div>
+                <div className="text-blue-500">🏢</div>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">Across 5 sectors</p>
+            </div>
+
+            <div className="bg-card p-6 rounded-lg border border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Widgets</p>
+                  <p className="text-2xl font-bold text-foreground">{widgets.length}</p>
+                </div>
+                <div className="text-purple-500">⚡</div>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">Dashboard widgets</p>
+            </div>
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-card p-6 rounded-lg border border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Portfolio Performance</h3>
+              <div className="h-64 bg-secondary/20 rounded-lg flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-4xl mb-2">📊</div>
+                  <p>Chart widget placeholder</p>
+                  <p className="text-sm">Will integrate Recharts in next step</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card p-6 rounded-lg border border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Market Overview</h3>
+              <div className="h-64 bg-secondary/20 rounded-lg flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-4xl mb-2">📈</div>
+                  <p>Market data widget</p>
+                  <p className="text-sm">Coming in widget system step</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Card */}
+          <div className="bg-card p-6 rounded-lg border border-border">
+            <h3 className="text-lg font-semibold text-foreground mb-4">System Status</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-muted-foreground">
+                  Current theme: <span className="font-mono text-foreground">{getEffectiveTheme()}</span>
+                </p>
+                <p className="text-muted-foreground">
+                  Theme setting: <span className="font-mono text-foreground">{currentTheme}</span>
+                </p>
+                <p className="text-muted-foreground">
+                  Widgets count: <span className="font-mono text-foreground">{widgets.length}</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-green-600 font-medium">✅ Project setup complete!</p>
+                <p className="text-blue-600 font-medium">🎨 Theme toggle working!</p>
+                <p className="text-purple-600 font-medium">🏗️ Dashboard layout ready!</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
