@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Widget {
   id: string;
-  type: "table" | "chart" | "card";
+  type: "table" | "chart" | "card" | "stock" | "crypto" | "market-overview" | "portfolio";
   title: string;
   position: { x: number; y: number };
   size: { width: number; height: number };

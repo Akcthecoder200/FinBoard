@@ -1,102 +1,383 @@
-'use client';
+"use client";
 
-import { Widget } from '@/store/slices/widgetsSlice';
+import { Widget } from "@/store/slices/widgetsSlice";
+import { useWidgetData } from "@/hooks/useFinancialData";
+import {
+  formatCurrency,
+  formatPercentage,
+  type StockData,
+  type CryptoData,
+  type MarketData,
+} from "@/services/financialApi";
 
 interface WidgetCardProps {
   widget: Widget;
   onRemove: () => void;
 }
 
-interface TableData {
-  data: Array<{
-    symbol: string;
-    price: string;
-    change: string;
-    percent: string;
-  }>;
-}
+// Type guards for different data types
+const isStockData = (data: unknown): data is StockData => {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "symbol" in data &&
+    "price" in data &&
+    "change" in data
+  );
+};
 
-interface ChartData {
-  symbol: string;
-  price: string;
-  change: string;
-  trend: 'up' | 'down';
-}
+const isCryptoData = (data: unknown): data is CryptoData => {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "symbol" in data &&
+    "price" in data &&
+    "change" in data
+  );
+};
 
-interface CardData {
-  title: string;
-  values: string[];
-  changes: string[];
-}
+const isMarketData = (data: unknown): data is MarketData => {
+  return typeof data === "object" && data !== null && "indices" in data;
+};
+
+const isStockArray = (data: unknown): data is StockData[] => {
+  return Array.isArray(data) && data.length > 0 && isStockData(data[0]);
+};
 
 export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
+  // Use our real data hook
+  const { data, loading, error, refetch } = useWidgetData(
+    {
+      type: widget.type,
+      config: widget.config || {},
+    },
+    {
+      refreshInterval: 60000, // Refresh every minute
+      enabled: true,
+    }
+  );
+
   const getWidgetIcon = (type: string) => {
     switch (type) {
-      case 'table': return '📊';
-      case 'chart': return '📈';
-      case 'card': return '💰';
-      default: return '📋';
+      case "stock":
+        return "�";
+      case "crypto":
+        return "₿";
+      case "market-overview":
+        return "🌐";
+      case "portfolio":
+        return "�";
+      default:
+        return "📋";
     }
   };
 
   const getWidgetDescription = (widget: Widget) => {
     switch (widget.type) {
-      case 'table':
-        return `Table showing ${(widget.config?.symbol as string) || 'stock'} data with ${widget.config?.pageSize || 10} rows`;
-      case 'chart':
-        return `${widget.config?.chartType || 'Line'} chart for ${(widget.config?.symbol as string) || 'AAPL'} (${widget.config?.timeframe || '1D'})`;
-      case 'card':
-        return `Finance card tracking ${Array.isArray(widget.config?.symbols) ? widget.config.symbols.length : 3} symbols`;
+      case "stock":
+        return `Real-time stock data for ${
+          (widget.config?.symbol as string) || "symbol"
+        }`;
+      case "crypto":
+        return `Live cryptocurrency data for ${
+          (widget.config?.symbol as string) || "symbol"
+        }`;
+      case "market-overview":
+        return `Market indices and sector performance overview`;
+      case "portfolio":
+        const symbols = widget.config?.symbols as string[];
+        return `Portfolio tracking ${symbols?.length || 0} symbols`;
       default:
-        return 'Custom widget';
+        return "Custom financial widget";
     }
   };
 
-  const getMockData = (widget: Widget): TableData | ChartData | CardData => {
+  const renderStockData = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-6">
+          <div className="text-red-500 text-sm mb-2">⚠️ {error}</div>
+          <button
+            onClick={refetch}
+            className="text-xs text-primary hover:text-primary/80 underline"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    if (!data || !isStockData(data)) {
+      return (
+        <div className="text-center py-6 text-muted-foreground text-sm">
+          No data available
+        </div>
+      );
+    }
+
+    const isPositive = data.change >= 0;
+
+    return (
+      <div className="text-center">
+        <div className="flex items-center gap-2 mb-3 justify-center">
+          <div
+            className={`w-2 h-2 rounded-full ${
+              isPositive ? "bg-green-500" : "bg-red-500"
+            }`}
+          ></div>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Live Stock Data
+          </span>
+        </div>
+        <div className="text-2xl font-bold text-foreground mb-2">
+          {formatCurrency(data.price)}
+        </div>
+        <div
+          className={`text-sm font-medium mb-4 ${
+            isPositive ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {isPositive ? "+" : ""}
+          {formatCurrency(data.change)} ({formatPercentage(data.changePercent)})
+        </div>
+        {data.volume && (
+          <div className="text-xs text-muted-foreground">
+            Volume: {data.volume.toLocaleString()}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderCryptoData = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-6">
+          <div className="text-red-500 text-sm mb-2">⚠️ {error}</div>
+          <button
+            onClick={refetch}
+            className="text-xs text-primary hover:text-primary/80 underline"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    if (!data || !isCryptoData(data)) {
+      return (
+        <div className="text-center py-6 text-muted-foreground text-sm">
+          No data available
+        </div>
+      );
+    }
+
+    const isPositive = data.change >= 0;
+
+    return (
+      <div className="text-center">
+        <div className="flex items-center gap-2 mb-3 justify-center">
+          <div
+            className={`w-2 h-2 rounded-full ${
+              isPositive ? "bg-green-500" : "bg-red-500"
+            }`}
+          ></div>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Live Crypto Data
+          </span>
+        </div>
+        <div className="text-2xl font-bold text-foreground mb-2">
+          {formatCurrency(data.price)}
+        </div>
+        <div
+          className={`text-sm font-medium mb-4 ${
+            isPositive ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {isPositive ? "+" : ""}
+          {formatCurrency(data.change)} ({formatPercentage(data.changePercent)})
+        </div>
+        {data.volume && (
+          <div className="text-xs text-muted-foreground">
+            24h Volume: {(data.volume / 1e9).toFixed(2)}B
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderMarketData = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-6">
+          <div className="text-red-500 text-sm mb-2">⚠️ {error}</div>
+          <button
+            onClick={refetch}
+            className="text-xs text-primary hover:text-primary/80 underline"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    if (!data || !isMarketData(data) || !data.indices) {
+      return (
+        <div className="text-center py-6 text-muted-foreground text-sm">
+          No market data available
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Market Overview
+          </span>
+        </div>
+        <div className="space-y-2">
+          {Object.entries(data.indices).map(([key, indexData]) => {
+            const index = indexData as {
+              value: number;
+              change: number;
+              changePercent: number;
+            };
+            const isPositive = index.change >= 0;
+            return (
+              <div
+                key={key}
+                className="flex justify-between items-center text-sm bg-background/50 rounded-md px-3 py-2"
+              >
+                <span className="font-medium capitalize">
+                  {key.replace(/([A-Z])/g, " $1").trim()}
+                </span>
+                <span className="font-mono">{index.value.toFixed(2)}</span>
+                <span
+                  className={`font-mono text-xs px-2 py-1 rounded ${
+                    isPositive
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                  }`}
+                >
+                  {formatPercentage(index.changePercent)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderPortfolioData = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-6">
+          <div className="text-red-500 text-sm mb-2">⚠️ {error}</div>
+          <button
+            onClick={refetch}
+            className="text-xs text-primary hover:text-primary/80 underline"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    if (!data || !isStockArray(data) || data.length === 0) {
+      return (
+        <div className="text-center py-6 text-muted-foreground text-sm">
+          No portfolio data available
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Portfolio
+          </span>
+        </div>
+        <div className="space-y-2">
+          {data.slice(0, 3).map((stock, index) => {
+            const isPositive = stock.change >= 0;
+            return (
+              <div
+                key={index}
+                className="flex justify-between items-center text-sm bg-background/50 rounded-md px-3 py-2"
+              >
+                <span className="font-mono font-medium">{stock.symbol}</span>
+                <span className="font-mono">{formatCurrency(stock.price)}</span>
+                <span
+                  className={`font-mono text-xs px-2 py-1 rounded ${
+                    isPositive
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                  }`}
+                >
+                  {formatPercentage(stock.changePercent)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderWidgetContent = () => {
     switch (widget.type) {
-      case 'table':
-        return {
-          data: [
-            { symbol: 'AAPL', price: '$173.50', change: '+$2.45', percent: '+1.43%' },
-            { symbol: 'GOOGL', price: '$138.21', change: '-$1.12', percent: '-0.80%' },
-            { symbol: 'TSLA', price: '$248.50', change: '+$12.30', percent: '+5.21%' },
-          ]
-        };
-      case 'chart':
-        return {
-          symbol: (widget.config?.symbol as string) || 'AAPL',
-          price: '$173.50',
-          change: '+2.45 (+1.43%)',
-          trend: 'up' as const
-        };
-      case 'card':
-        return {
-          title: widget.config?.cardType === 'watchlist' ? 'Watchlist' : 'Market Summary',
-          values: ['$173.50', '$138.21', '$248.50'],
-          changes: ['+1.43%', '-0.80%', '+5.21%']
-        };
+      case "stock":
+        return renderStockData();
+      case "crypto":
+        return renderCryptoData();
+      case "market-overview":
+        return renderMarketData();
+      case "portfolio":
+        return renderPortfolioData();
       default:
-        return {
-          title: 'Default Card',
-          values: ['No data'],
-          changes: ['N/A']
-        };
+        return (
+          <div className="text-center py-6 text-muted-foreground text-sm">
+            Unsupported widget type: {widget.type}
+          </div>
+        );
     }
-  };
-
-  const mockData = getMockData(widget);
-
-  // Type guard functions
-  const isTableData = (data: TableData | ChartData | CardData): data is TableData => {
-    return 'data' in data;
-  };
-
-  const isChartData = (data: TableData | ChartData | CardData): data is ChartData => {
-    return 'price' in data && 'trend' in data;
-  };
-
-  const isCardData = (data: TableData | ChartData | CardData): data is CardData => {
-    return 'title' in data && 'values' in data;
   };
 
   return (
@@ -109,17 +390,30 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
           </div>
           <div>
             <h3 className="font-semibold text-foreground">{widget.title}</h3>
-            <p className="text-xs text-muted-foreground capitalize">{widget.type} widget</p>
+            <p className="text-xs text-muted-foreground capitalize">
+              {widget.type} widget
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
+            onClick={refetch}
             className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
-            title="Widget settings"
+            title="Refresh data"
+            disabled={loading}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <svg
+              className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
             </svg>
           </button>
           <button
@@ -127,8 +421,18 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
             className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
             title="Remove widget"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
           </button>
         </div>
@@ -143,62 +447,7 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
 
       {/* Widget Content */}
       <div className="bg-gradient-to-br from-secondary/30 to-secondary/10 rounded-lg p-4 min-h-[140px] border border-secondary/20">
-        {widget.type === 'table' && isTableData(mockData) && (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Live Data Preview</span>
-            </div>
-            <div className="space-y-2">
-              {mockData.data.map((row, index) => (
-                <div key={index} className="flex justify-between items-center text-sm bg-background/50 rounded-md px-3 py-2">
-                  <span className="font-mono font-medium">{row.symbol}</span>
-                  <span className="font-mono">{row.price}</span>
-                  <span className={`font-mono text-xs px-2 py-1 rounded ${row.change.startsWith('+') ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
-                    {row.percent}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {widget.type === 'chart' && isChartData(mockData) && (
-          <div className="text-center">
-            <div className="flex items-center gap-2 mb-3 justify-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chart Preview</span>
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-2">{mockData.price}</div>
-            <div className={`text-sm font-medium mb-4 ${mockData.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-              {mockData.change}
-            </div>
-            <div className="h-16 bg-gradient-to-r from-blue-500/20 via-green-500/20 to-blue-500/20 rounded-lg flex items-end justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent"></div>
-              <div className="text-xs text-muted-foreground relative z-10">📈 Interactive chart coming soon</div>
-            </div>
-          </div>
-        )}
-
-        {widget.type === 'card' && isCardData(mockData) && (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{mockData.title}</span>
-            </div>
-            <div className="space-y-2">
-              {mockData.values.map((value: string, index: number) => (
-                <div key={index} className="flex justify-between items-center text-sm bg-background/50 rounded-md px-3 py-2">
-                  <span className="font-mono text-muted-foreground">{['AAPL', 'GOOGL', 'TSLA'][index]}</span>
-                  <span className="font-mono font-medium">{value}</span>
-                  <span className={`font-mono text-xs px-2 py-1 rounded ${mockData.changes[index].startsWith('+') ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
-                    {mockData.changes[index]}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {renderWidgetContent()}
       </div>
 
       {/* Widget Footer */}
@@ -206,7 +455,7 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"></div>
-            ID: {widget.id.split('-').pop()}
+            ID: {widget.id.split("-").pop()}
           </span>
           <span className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 bg-primary/60 rounded-full"></div>
@@ -214,8 +463,16 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
           </span>
         </div>
         <div className="text-xs text-muted-foreground">
-          <span className="bg-secondary/50 px-2 py-1 rounded-full">
-            Active
+          <span
+            className={`px-2 py-1 rounded-full ${
+              error
+                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                : loading
+                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+            }`}
+          >
+            {error ? "Error" : loading ? "Loading..." : "Live"}
           </span>
         </div>
       </div>

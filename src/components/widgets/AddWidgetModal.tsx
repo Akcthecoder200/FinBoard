@@ -12,9 +12,10 @@ interface AddWidgetModalProps {
 
 interface WidgetFormData {
   name: string;
-  apiUrl: string;
+  symbol: string;
+  symbols: string[];
   refreshInterval: number;
-  displayType: "card" | "table" | "chart";
+  displayType: "stock" | "crypto" | "market-overview" | "portfolio";
   selectedFields: string[];
   description: string;
 }
@@ -35,21 +36,22 @@ const AVAILABLE_FIELDS = [
 ];
 
 const REFRESH_INTERVALS = [
-  { value: 5, label: "5 seconds" },
-  { value: 15, label: "15 seconds" },
   { value: 30, label: "30 seconds" },
   { value: 60, label: "1 minute" },
   { value: 300, label: "5 minutes" },
   { value: 900, label: "15 minutes" },
+  { value: 1800, label: "30 minutes" },
+  { value: 3600, label: "1 hour" },
 ];
 
 export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState<WidgetFormData>({
     name: "",
-    apiUrl: "https://api.example.com/stocks",
-    refreshInterval: 30,
-    displayType: "card",
+    symbol: "AAPL",
+    symbols: ["AAPL", "GOOGL", "MSFT"],
+    refreshInterval: 60,
+    displayType: "stock",
     selectedFields: ["symbol", "price", "change"],
     description: "",
   });
@@ -86,19 +88,32 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
   };
 
   const handleSubmit = () => {
+    const baseConfig: Record<string, unknown> = {
+      refreshInterval: formData.refreshInterval,
+      selectedFields: formData.selectedFields,
+    };
+
+    // Add widget-specific config
+    switch (formData.displayType) {
+      case "stock":
+      case "crypto":
+        baseConfig.symbol = formData.symbol;
+        break;
+      case "portfolio":
+        baseConfig.symbols = formData.symbols;
+        break;
+      case "market-overview":
+        // No additional config needed
+        break;
+    }
+
     const newWidget: Widget = {
       id: `widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: formData.displayType,
       title: formData.name || `${formData.displayType} Widget`,
       position: { x: 0, y: 0 },
       size: { width: 1, height: 1 },
-      config: {
-        apiUrl: formData.apiUrl,
-        refreshInterval: formData.refreshInterval,
-        selectedFields: formData.selectedFields,
-        description: formData.description,
-        symbol: "AAPL", // Default symbol
-      },
+      config: baseConfig,
     };
 
     dispatch(addWidget(newWidget));
@@ -106,9 +121,10 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
     // Reset form and close modal
     setFormData({
       name: "",
-      apiUrl: "https://api.example.com/stocks",
-      refreshInterval: 30,
-      displayType: "card",
+      symbol: "AAPL",
+      symbols: ["AAPL", "GOOGL", "MSFT"],
+      refreshInterval: 60,
+      displayType: "stock",
       selectedFields: ["symbol", "price", "change"],
       description: "",
     });
@@ -121,7 +137,19 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
       case 1:
         return formData.name.trim().length > 0;
       case 2:
-        return formData.apiUrl.trim().length > 0;
+        if (
+          formData.displayType === "stock" ||
+          formData.displayType === "crypto"
+        ) {
+          return formData.symbol.trim().length > 0;
+        }
+        if (formData.displayType === "portfolio") {
+          return (
+            formData.symbols.length > 0 &&
+            formData.symbols.every((s) => s.trim().length > 0)
+          );
+        }
+        return true; // market-overview doesn't need additional validation
       case 3:
         return formData.selectedFields.length > 0;
       case 4:
@@ -266,24 +294,96 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
             </div>
           )}
 
-          {/* Step 2: Data Source */}
+          {/* Step 2: Data Configuration */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  API URL *
-                </label>
-                <input
-                  type="url"
-                  value={formData.apiUrl}
-                  onChange={(e) => handleInputChange("apiUrl", e.target.value)}
-                  placeholder="https://api.example.com/stocks"
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Enter the API endpoint that provides your financial data
-                </p>
-              </div>
+              {(formData.displayType === "stock" ||
+                formData.displayType === "crypto") && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {formData.displayType === "stock"
+                      ? "Stock Symbol"
+                      : "Cryptocurrency Symbol"}{" "}
+                    *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.symbol}
+                    onChange={(e) =>
+                      handleInputChange("symbol", e.target.value.toUpperCase())
+                    }
+                    placeholder={
+                      formData.displayType === "stock"
+                        ? "AAPL, GOOGL, MSFT..."
+                        : "BTC, ETH, ADA..."
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter the{" "}
+                    {formData.displayType === "stock"
+                      ? "stock ticker"
+                      : "crypto"}{" "}
+                    symbol you want to track
+                  </p>
+                </div>
+              )}
+
+              {formData.displayType === "portfolio" && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Portfolio Symbols *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.symbols.join(", ")}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "symbols",
+                        e.target.value
+                          .split(",")
+                          .map((s) => s.trim().toUpperCase())
+                      )
+                    }
+                    placeholder="AAPL, GOOGL, MSFT, TSLA"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter stock symbols separated by commas for your portfolio
+                  </p>
+                </div>
+              )}
+
+              {formData.displayType === "market-overview" && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="text-blue-500 mt-0.5">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        Market Overview Widget
+                      </h4>
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                        This widget displays major market indices and sector
+                        performance automatically. No configuration needed.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
@@ -343,27 +443,33 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-3">
-                  Display Type *
+                  Widget Type *
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   {[
                     {
-                      type: "card",
-                      icon: "💰",
-                      title: "Card",
-                      desc: "Summary cards",
+                      type: "stock",
+                      icon: "�",
+                      title: "Stock Tracker",
+                      desc: "Real-time stock data",
                     },
                     {
-                      type: "table",
-                      icon: "📊",
-                      title: "Table",
-                      desc: "Data table",
+                      type: "crypto",
+                      icon: "₿",
+                      title: "Crypto Tracker",
+                      desc: "Cryptocurrency prices",
                     },
                     {
-                      type: "chart",
-                      icon: "📈",
-                      title: "Chart",
-                      desc: "Visual chart",
+                      type: "market-overview",
+                      icon: "🌐",
+                      title: "Market Overview",
+                      desc: "Market indices & sectors",
+                    },
+                    {
+                      type: "portfolio",
+                      icon: "�",
+                      title: "Portfolio",
+                      desc: "Multiple stocks view",
                     },
                   ].map((option) => (
                     <button
@@ -441,12 +547,23 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                       {formData.displayType}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">API URL:</span>
-                    <span className="font-mono text-xs bg-background px-2 py-1 rounded">
-                      {formData.apiUrl}
-                    </span>
-                  </div>
+                  {(formData.displayType === "stock" ||
+                    formData.displayType === "crypto") && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Symbol:</span>
+                      <span className="font-mono text-xs bg-background px-2 py-1 rounded">
+                        {formData.symbol}
+                      </span>
+                    </div>
+                  )}
+                  {formData.displayType === "portfolio" && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Symbols:</span>
+                      <span className="font-mono text-xs bg-background px-2 py-1 rounded">
+                        {formData.symbols.join(", ")}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Refresh:</span>
                     <span className="font-medium">
