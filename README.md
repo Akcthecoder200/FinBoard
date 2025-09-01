@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FinBoard - Finance Dashboard
 
-## Getting Started
+A customizable finance dashboard built with Next.js, Tailwind CSS, Redux Toolkit, and Recharts.
 
-First, run the development server:
+## ✅ Step 1: Project Setup - COMPLETED
+
+### What we accomplished:
+
+1. **Next.js Project Initialization**
+   - Created Next.js 15.5.2 project with TypeScript
+   - Configured with App Router and `src/` directory
+   - Set up proper import aliases (`@/*`)
+
+2. **Dependencies Installed**
+   - Next.js with TypeScript and Tailwind CSS v4
+   - Redux Toolkit and React-Redux for state management
+   - Recharts for future chart widgets
+
+3. **Project Structure Created**
+   ```
+   src/
+   ├── app/
+   │   ├── globals.css        # Tailwind + theme variables
+   │   ├── layout.tsx         # Root layout with providers
+   │   └── page.tsx           # Home page
+   ├── components/
+   │   ├── ReduxProvider.tsx  # Redux store provider
+   │   └── ThemeProvider.tsx  # Theme context provider
+   ├── store/
+   │   ├── index.ts           # Redux store configuration
+   │   └── slices/
+   │       └── widgetsSlice.ts # Widgets state management
+   └── utils/                 # Future utility functions
+   ```
+
+4. **Redux Toolkit Setup**
+   - Configured store with widgets slice
+   - Created widget types and actions (add, remove, update, reorder)
+   - Integrated with React components
+
+5. **Theme System**
+   - Tailwind CSS v4 with CSS variables
+   - Dark/light/system theme support
+   - Custom color palette for dashboard UI
+
+6. **Development Environment**
+   - Development server running on http://localhost:3000
+   - Hot reload working
+   - TypeScript compilation successful
+   - No lint errors
+
+### Current Status:
+- ✅ Basic dashboard layout
+- ✅ Theme system working perfectly (Light/Dark/System)
+- ✅ Redux state management ready
+- ✅ Widget counter display (currently shows 0 widgets)
+- ✅ Theme persistence in localStorage
+- ✅ SSR-safe theme implementation
+
+### Ready for Next Step:
+The project foundation is solid and ready for **Step 2: Dashboard Layout** where we'll create the responsive sidebar and main content area for widgets.
+
+## Development Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev    # Start development server
+npm run build  # Build for production
+npm run start  # Start production server
+npm run lint   # Run ESLint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Framework**: Next.js 15.5.2 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **State Management**: Redux Toolkit
+- **Charts**: Recharts (ready for use)
+- **Deployment**: Ready for Vercel
