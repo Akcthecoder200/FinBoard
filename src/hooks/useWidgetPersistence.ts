@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { hydrateWidgets } from '@/store/slices/widgetsSlice';
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { hydrateWidgets } from "@/store/slices/widgetsSlice";
 
 export function useWidgetPersistence() {
   const dispatch = useDispatch();

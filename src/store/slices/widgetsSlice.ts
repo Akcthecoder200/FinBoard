@@ -1,8 +1,8 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Widget {
   id: string;
-  type: 'table' | 'chart' | 'card';
+  type: "table" | "chart" | "card";
   title: string;
   position: { x: number; y: number };
   size: { width: number; height: number };
@@ -16,25 +16,25 @@ interface WidgetsState {
 
 // Helper function to load widgets from localStorage
 const loadWidgetsFromStorage = (): Widget[] => {
-  if (typeof window === 'undefined') return []; // SSR safety
-  
+  if (typeof window === "undefined") return []; // SSR safety
+
   try {
-    const stored = localStorage.getItem('finboard-widgets');
+    const stored = localStorage.getItem("finboard-widgets");
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    console.warn('Failed to load widgets from localStorage:', error);
+    console.warn("Failed to load widgets from localStorage:", error);
     return [];
   }
 };
 
 // Helper function to save widgets to localStorage
 const saveWidgetsToStorage = (widgets: Widget[]) => {
-  if (typeof window === 'undefined') return; // SSR safety
-  
+  if (typeof window === "undefined") return; // SSR safety
+
   try {
-    localStorage.setItem('finboard-widgets', JSON.stringify(widgets));
+    localStorage.setItem("finboard-widgets", JSON.stringify(widgets));
   } catch (error) {
-    console.warn('Failed to save widgets to localStorage:', error);
+    console.warn("Failed to save widgets to localStorage:", error);
   }
 };
 
@@ -44,7 +44,7 @@ const initialState: WidgetsState = {
 };
 
 const widgetsSlice = createSlice({
-  name: 'widgets',
+  name: "widgets",
   initialState,
   reducers: {
     // New action to hydrate widgets from localStorage
@@ -56,11 +56,15 @@ const widgetsSlice = createSlice({
       saveWidgetsToStorage(state.widgets);
     },
     removeWidget: (state, action: PayloadAction<string>) => {
-      state.widgets = state.widgets.filter(widget => widget.id !== action.payload);
+      state.widgets = state.widgets.filter(
+        (widget) => widget.id !== action.payload
+      );
       saveWidgetsToStorage(state.widgets);
     },
     updateWidget: (state, action: PayloadAction<Widget>) => {
-      const index = state.widgets.findIndex(widget => widget.id === action.payload.id);
+      const index = state.widgets.findIndex(
+        (widget) => widget.id === action.payload.id
+      );
       if (index !== -1) {
         state.widgets[index] = action.payload;
         saveWidgetsToStorage(state.widgets);
@@ -81,14 +85,14 @@ const widgetsSlice = createSlice({
   },
 });
 
-export const { 
-  hydrateWidgets, 
-  addWidget, 
-  removeWidget, 
-  updateWidget, 
-  reorderWidgets, 
+export const {
+  hydrateWidgets,
+  addWidget,
+  removeWidget,
+  updateWidget,
+  reorderWidgets,
   setDragEnabled,
-  clearAllWidgets 
+  clearAllWidgets,
 } = widgetsSlice.actions;
 
 export default widgetsSlice.reducer;
