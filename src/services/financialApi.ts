@@ -63,44 +63,96 @@ export interface ApiConfig {
 export const API_CONFIGS = {
   // Alpha Vantage (free tier available)
   alphaVantage: {
-    baseUrl: 'https://www.alphavantage.co/query',
+    baseUrl: "https://www.alphavantage.co/query",
     rateLimitPerMinute: 5,
     timeout: 10000,
     // Note: Requires API key - users can get free key from alphavantage.co
   },
-  
+
   // Yahoo Finance Alternative (no key required)
   yahooFinance: {
-    baseUrl: 'https://query1.finance.yahoo.com/v8/finance/chart',
+    baseUrl: "https://query1.finance.yahoo.com/v8/finance/chart",
     rateLimitPerMinute: 200,
     timeout: 10000,
   },
-  
-  // IEX Cloud (free tier available) 
+
+  // IEX Cloud (free tier available)
   iexCloud: {
-    baseUrl: 'https://cloud.iexapis.com/stable',
+    baseUrl: "https://cloud.iexapis.com/stable",
     rateLimitPerMinute: 100,
     timeout: 10000,
     // Note: Requires API key - users can get free key from iexcloud.io
   },
-  
+
   // Finnhub (free tier available)
   finnhub: {
-    baseUrl: 'https://finnhub.io/api/v1',
+    baseUrl: "https://finnhub.io/api/v1",
     rateLimitPerMinute: 60,
     timeout: 10000,
     // Note: Requires API key - users can get free key from finnhub.io
   },
-  
+
   // Mock API for testing
   mockApi: {
-    baseUrl: 'https://jsonplaceholder.typicode.com',
+    baseUrl: "https://jsonplaceholder.typicode.com",
     rateLimitPerMinute: 1000,
     timeout: 5000,
-  }
+  },
 };
 
 class FinancialApiService {
+  // Finnhub fetch via Next.js API route (CORS-free)
+  // Finnhub fetch via Next.js API route (CORS-free)
+  async fetchFinnhub(symbol: string): Promise<ApiResponse<StockData>> {
+    const url = `/api/stock-finnhub/${symbol}`;
+    try {
+      const response = await this.makeRequest(url);
+      if (!response.success || !response.data) {
+        return response as ApiResponse<StockData>;
+      }
+      const apiResponse = response.data as { success: boolean; data: StockData; error?: string };
+      if (!apiResponse.success) {
+        throw new Error(apiResponse.error || 'API returned unsuccessful response');
+      }
+      return {
+        success: true,
+        data: apiResponse.data,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch Finnhub data',
+        timestamp: new Date(),
+      };
+    }
+  }
+
+  // IndianAPI fetch via Next.js API route (CORS-free)
+  async fetchIndianApi(symbol: string): Promise<ApiResponse<StockData>> {
+    const url = `/api/stock-indianapi/${symbol}`;
+    try {
+      const response = await this.makeRequest(url);
+      if (!response.success || !response.data) {
+        return response as ApiResponse<StockData>;
+      }
+      const apiResponse = response.data as { success: boolean; data: StockData; error?: string };
+      if (!apiResponse.success) {
+        throw new Error(apiResponse.error || 'API returned unsuccessful response');
+      }
+      return {
+        success: true,
+        data: apiResponse.data,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch IndianAPI data',
+        timestamp: new Date(),
+      };
+    }
+  }
   private config: ApiConfig;
   private requestCount = 0;
   private resetTime = Date.now() + 60000; // Reset every minute
@@ -109,12 +161,52 @@ class FinancialApiService {
     this.config = config;
   }
 
-  private async makeRequest<T>(url: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  // Alpha Vantage fetch via Next.js API route (CORS-free)
+  async fetchAlphaVantage(symbol: string): Promise<ApiResponse<StockData>> {
+    const url = `/api/stock-alpha-vantage/${symbol}`;
+    try {
+      const response = await this.makeRequest(url);
+      if (!response.success || !response.data) {
+        return response as ApiResponse<StockData>;
+      }
+      const apiResponse = response.data as {
+        success: boolean;
+        data: StockData;
+        error?: string;
+      };
+      if (!apiResponse.success) {
+        throw new Error(
+          apiResponse.error || "API returned unsuccessful response"
+        );
+      }
+      return {
+        success: true,
+        data: apiResponse.data,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch Alpha Vantage data",
+        timestamp: new Date(),
+      };
+    }
+  }
+
+  private async makeRequest<T>(
+    url: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
     try {
       // Rate limiting check
       if (this.requestCount >= (this.config.rateLimitPerMinute || 100)) {
         if (Date.now() < this.resetTime) {
-          throw new Error('Rate limit exceeded. Please wait before making more requests.');
+          throw new Error(
+            "Rate limit exceeded. Please wait before making more requests."
+          );
         } else {
           this.requestCount = 0;
           this.resetTime = Date.now() + 60000;
@@ -124,13 +216,16 @@ class FinancialApiService {
       this.requestCount++;
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout || 10000);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        this.config.timeout || 10000
+      );
 
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...options.headers,
         },
       });
@@ -142,18 +237,19 @@ class FinancialApiService {
       }
 
       const data = await response.json();
-      
+
       return {
         success: true,
         data,
         timestamp: new Date(),
       };
     } catch (error) {
-      console.error('API request failed:', error);
-      
+      console.error("API request failed:", error);
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
         timestamp: new Date(),
       };
     }
@@ -162,18 +258,24 @@ class FinancialApiService {
   // Yahoo Finance implementation via Next.js API route (CORS-free)
   async fetchYahooFinance(symbol: string): Promise<ApiResponse<StockData>> {
     const url = `/api/stock/${symbol}`;
-    
+
     try {
       const response = await this.makeRequest(url);
-      
+
       if (!response.success || !response.data) {
         return response as ApiResponse<StockData>;
       }
 
-      const apiResponse = response.data as { success: boolean; data: StockData; error?: string };
-      
+      const apiResponse = response.data as {
+        success: boolean;
+        data: StockData;
+        error?: string;
+      };
+
       if (!apiResponse.success) {
-        throw new Error(apiResponse.error || 'API returned unsuccessful response');
+        throw new Error(
+          apiResponse.error || "API returned unsuccessful response"
+        );
       }
 
       return {
@@ -184,7 +286,10 @@ class FinancialApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch Yahoo Finance data',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch Yahoo Finance data",
         timestamp: new Date(),
       };
     }
@@ -194,7 +299,9 @@ class FinancialApiService {
   async fetchMockData(symbol: string): Promise<ApiResponse<StockData>> {
     try {
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, 500 + Math.random() * 1000)
+      );
 
       // Generate realistic mock data
       const basePrice = Math.random() * 1000 + 50;
@@ -226,39 +333,62 @@ class FinancialApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Mock API error',
+        error: error instanceof Error ? error.message : "Mock API error",
         timestamp: new Date(),
       };
     }
   }
 
   // Generic fetch method that can be extended for other APIs
-  async fetchStockData(symbol: string, apiType: 'yahoo' | 'mock' = 'mock'): Promise<ApiResponse<StockData>> {
+  async fetchStockData(
+    symbol: string,
+    apiType: "yahoo" | "alphaVantage" | "finnhub" | "indianapi" | "mock" = "mock"
+  ): Promise<ApiResponse<StockData>> {
+    // Auto-select provider based on symbol
+    if (symbol.endsWith('.BSE')) {
+      return this.fetchAlphaVantage(symbol);
+    } else if (symbol.endsWith('.NS')) {
+      return this.fetchFinnhub(symbol);
+    } else if (symbol.endsWith('.BO')) {
+      return this.fetchIndianApi(symbol);
+    }
     switch (apiType) {
-      case 'yahoo':
+      case "yahoo":
         return this.fetchYahooFinance(symbol);
-      case 'mock':
+      case "alphaVantage":
+        return this.fetchAlphaVantage(symbol);
+      case "finnhub":
+        return this.fetchFinnhub(symbol);
+      case "indianapi":
+        return this.fetchIndianApi(symbol);
+      case "mock":
       default:
         return this.fetchMockData(symbol);
     }
   }
 
   // Fetch multiple stocks
-  async fetchMultipleStocks(symbols: string[], apiType: 'yahoo' | 'mock' = 'mock'): Promise<ApiResponse<StockData[]>> {
+  async fetchMultipleStocks(
+    symbols: string[],
+    apiType: "yahoo" | "mock" = "mock"
+  ): Promise<ApiResponse<StockData[]>> {
     try {
-      const promises = symbols.map(symbol => this.fetchStockData(symbol, apiType));
+      const promises = symbols.map((symbol) =>
+        this.fetchStockData(symbol, apiType)
+      );
       const results = await Promise.allSettled(promises);
-      
+
       const successfulResults: StockData[] = [];
       const errors: string[] = [];
 
       results.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value.success) {
+        if (result.status === "fulfilled" && result.value.success) {
           successfulResults.push(result.value.data!);
         } else {
-          const error = result.status === 'rejected' 
-            ? result.reason?.message || 'Unknown error'
-            : result.value.error || 'API error';
+          const error =
+            result.status === "rejected"
+              ? result.reason?.message || "Unknown error"
+              : result.value.error || "API error";
           errors.push(`${symbols[index]}: ${error}`);
         }
       });
@@ -266,7 +396,7 @@ class FinancialApiService {
       if (successfulResults.length === 0) {
         return {
           success: false,
-          error: `All requests failed: ${errors.join(', ')}`,
+          error: `All requests failed: ${errors.join(", ")}`,
           timestamp: new Date(),
         };
       }
@@ -279,18 +409,28 @@ class FinancialApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch multiple stocks',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch multiple stocks",
         timestamp: new Date(),
       };
     }
   }
 
   // Public API methods that hooks will use
-  async getStockQuote(symbol: string): Promise<StockData> {
-    const apiType = this.config.baseUrl?.includes('mock') ? 'mock' : 'yahoo';
-    const response = await this.fetchStockData(symbol, apiType);
+  async getStockQuote(
+    symbol: string,
+    apiType: "yahoo" | "alphaVantage" | "finnhub" | "indianapi" | "mock" = "yahoo"
+  ): Promise<StockData> {
+    // Auto-select provider for Indian stocks
+    let effectiveApiType = apiType;
+    if (symbol.endsWith('.BSE')) effectiveApiType = 'alphaVantage';
+    else if (symbol.endsWith('.NS')) effectiveApiType = 'finnhub';
+    else if (symbol.endsWith('.BO')) effectiveApiType = 'indianapi';
+    const response = await this.fetchStockData(symbol, effectiveApiType);
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to fetch stock data');
+      throw new Error(response.error || "Failed to fetch stock data");
     }
     return response.data;
   }
@@ -298,18 +438,27 @@ class FinancialApiService {
   async getCryptoQuote(symbol: string): Promise<CryptoData> {
     // Use API route for crypto data
     try {
-      const response = await this.makeRequest('/api/crypto');
+      const response = await this.makeRequest("/api/crypto");
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Failed to fetch crypto data');
+        throw new Error(response.error || "Failed to fetch crypto data");
       }
-      
-      const apiResponse = response.data as { success: boolean; data: CryptoData[]; error?: string };
+
+      const apiResponse = response.data as {
+        success: boolean;
+        data: CryptoData[];
+        error?: string;
+      };
       if (!apiResponse.success) {
-        throw new Error(apiResponse.error || 'API returned unsuccessful response');
+        throw new Error(
+          apiResponse.error || "API returned unsuccessful response"
+        );
       }
-      
+
       // Find the specific crypto or return the first one
-      const crypto = apiResponse.data.find(c => c.symbol.toUpperCase() === symbol.toUpperCase()) || apiResponse.data[0];
+      const crypto =
+        apiResponse.data.find(
+          (c) => c.symbol.toUpperCase() === symbol.toUpperCase()
+        ) || apiResponse.data[0];
       if (crypto) {
         return crypto;
       } else {
@@ -317,7 +466,10 @@ class FinancialApiService {
       }
     } catch (error) {
       // Fallback to mock data
-      console.warn('Failed to fetch crypto data from API, using mock data:', error);
+      console.warn(
+        "Failed to fetch crypto data from API, using mock data:",
+        error
+      );
       return this.generateMockCryptoData(symbol);
     }
   }
@@ -325,29 +477,38 @@ class FinancialApiService {
   async getMarketOverview(): Promise<MarketData> {
     // Use API route for market data
     try {
-      const response = await this.makeRequest('/api/market');
+      const response = await this.makeRequest("/api/market");
       if (!response.success || !response.data) {
-        throw new Error(response.error || 'Failed to fetch market data');
+        throw new Error(response.error || "Failed to fetch market data");
       }
-      
-      const apiResponse = response.data as { success: boolean; data: MarketData; error?: string };
+
+      const apiResponse = response.data as {
+        success: boolean;
+        data: MarketData;
+        error?: string;
+      };
       if (!apiResponse.success) {
-        throw new Error(apiResponse.error || 'API returned unsuccessful response');
+        throw new Error(
+          apiResponse.error || "API returned unsuccessful response"
+        );
       }
-      
+
       return apiResponse.data;
     } catch (error) {
       // Fallback to mock data
-      console.warn('Failed to fetch market data from API, using mock data:', error);
+      console.warn(
+        "Failed to fetch market data from API, using mock data:",
+        error
+      );
       return this.generateMockMarketData();
     }
   }
 
   async getMultipleStocks(symbols: string[]): Promise<StockData[]> {
-    const apiType = this.config.baseUrl?.includes('mock') ? 'mock' : 'yahoo';
+    const apiType = this.config.baseUrl?.includes("mock") ? "mock" : "yahoo";
     const response = await this.fetchMultipleStocks(symbols, apiType);
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to fetch multiple stocks');
+      throw new Error(response.error || "Failed to fetch multiple stocks");
     }
     return response.data;
   }
@@ -392,11 +553,31 @@ class FinancialApiService {
         },
       },
       sectors: [
-        { name: 'Technology', change: (Math.random() - 0.5) * 50, changePercent: (Math.random() - 0.5) * 3 },
-        { name: 'Healthcare', change: (Math.random() - 0.5) * 30, changePercent: (Math.random() - 0.5) * 2 },
-        { name: 'Financial', change: (Math.random() - 0.5) * 40, changePercent: (Math.random() - 0.5) * 2.5 },
-        { name: 'Energy', change: (Math.random() - 0.5) * 60, changePercent: (Math.random() - 0.5) * 4 },
-        { name: 'Consumer', change: (Math.random() - 0.5) * 35, changePercent: (Math.random() - 0.5) * 2.2 },
+        {
+          name: "Technology",
+          change: (Math.random() - 0.5) * 50,
+          changePercent: (Math.random() - 0.5) * 3,
+        },
+        {
+          name: "Healthcare",
+          change: (Math.random() - 0.5) * 30,
+          changePercent: (Math.random() - 0.5) * 2,
+        },
+        {
+          name: "Financial",
+          change: (Math.random() - 0.5) * 40,
+          changePercent: (Math.random() - 0.5) * 2.5,
+        },
+        {
+          name: "Energy",
+          change: (Math.random() - 0.5) * 60,
+          changePercent: (Math.random() - 0.5) * 4,
+        },
+        {
+          name: "Consumer",
+          change: (Math.random() - 0.5) * 35,
+          changePercent: (Math.random() - 0.5) * 2.2,
+        },
       ],
       timestamp: new Date(),
     };
@@ -404,7 +585,10 @@ class FinancialApiService {
 }
 
 // Factory function to create API service instances
-export function createApiService(configName: keyof typeof API_CONFIGS, apiKey?: string): FinancialApiService {
+export function createApiService(
+  configName: keyof typeof API_CONFIGS,
+  apiKey?: string
+): FinancialApiService {
   const config: ApiConfig = { ...API_CONFIGS[configName] };
   if (apiKey) {
     config.apiKey = apiKey;
@@ -413,15 +597,15 @@ export function createApiService(configName: keyof typeof API_CONFIGS, apiKey?: 
 }
 
 // Default service instance for easy use
-export const defaultApiService = createApiService('yahooFinance');
+export const defaultApiService = createApiService("yahooFinance");
 
 // Main API service for easy import
 export const financialApi = defaultApiService;
 
 // Utility function to format currency
-export function formatCurrency(value: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
+export function formatCurrency(value: number, currency = "USD"): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -430,7 +614,7 @@ export function formatCurrency(value: number, currency = 'USD'): string {
 
 // Utility function to format percentage
 export function formatPercentage(value: number): string {
-  const sign = value >= 0 ? '+' : '';
+  const sign = value >= 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;
 }
 
