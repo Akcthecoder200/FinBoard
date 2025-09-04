@@ -7,6 +7,7 @@ A comprehensive, real-time financial dashboard built with Next.js 15, React 19, 
 ## ✨ Features
 
 ### 🏗️ **Core Functionality**
+
 - **Real-time Market Data** - Live stock prices, crypto data, and market indicators
 - **Customizable Widgets** - Drag-and-drop dashboard with personalized layouts
 - **Advanced Charts** - Interactive candlestick charts with technical indicators
@@ -14,6 +15,7 @@ A comprehensive, real-time financial dashboard built with Next.js 15, React 19, 
 - **Responsive Design** - Optimized for desktop, tablet, and mobile devices
 
 ### 📊 **Widget Types**
+
 - **Stock Tracker** - Real-time stock prices and performance metrics
 - **Portfolio Manager** - Track holdings with P&L calculations
 - **Market Scanner** - Discover trending stocks and opportunities
@@ -21,6 +23,7 @@ A comprehensive, real-time financial dashboard built with Next.js 15, React 19, 
 - **News Feed** - Latest financial news and market updates
 
 ### � **User Experience**
+
 - **Modern UI/UX** - Clean, professional interface with dark/light themes
 - **Interactive Charts** - Drawing tools, annotations, and zoom capabilities
 - **Loading States** - Comprehensive feedback during data fetching
@@ -30,11 +33,13 @@ A comprehensive, real-time financial dashboard built with Next.js 15, React 19, 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 - Alpha Vantage API key (free at [alphavantage.co](https://www.alphavantage.co))
 
 ### Installation
+
 ```bash
 # Clone the repository
 git clone https://github.com/Akcthecoder200/FinBoard.git
@@ -52,7 +57,9 @@ npm run dev
 ```
 
 ### Environment Variables
+
 Create a `.env.local` file with:
+
 ```bash
 NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=your_api_key_here
 ```
@@ -60,6 +67,7 @@ NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=your_api_key_here
 ## 🏢 Tech Stack
 
 ### **Frontend**
+
 - **Next.js 15** - React framework with App Router
 - **React 19** - Latest React with enhanced features
 - **TypeScript** - Type-safe development
@@ -67,17 +75,20 @@ NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=your_api_key_here
 - **Redux Toolkit** - State management
 
 ### **Charts & Data Visualization**
+
 - **Recharts** - Responsive chart library
 - **Chart.js** - Interactive charts
 - **Lightweight Charts** - Professional trading charts
 - **React Financial Charts** - Advanced financial visualizations
 
 ### **APIs & Data**
+
 - **Alpha Vantage** - Stock market data
 - **Intelligent Caching** - Optimized data fetching
 - **Dynamic Data Mapping** - Flexible API integration
 
 ### **Features & Utilities**
+
 - **@dnd-kit** - Drag and drop functionality
 - **Browser Storage** - Local data persistence
 - **Responsive Layout** - Multi-device support
@@ -86,6 +97,7 @@ NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=your_api_key_here
 ## 📱 Responsive Design
 
 FinBoard is fully responsive with optimized layouts for:
+
 - **Desktop** (1200px+) - Full feature set with multi-column layouts
 - **Tablet** (768px-1199px) - Adapted interface with touch-friendly controls
 - **Mobile** (320px-767px) - Streamlined experience with stacked layouts
@@ -93,6 +105,7 @@ FinBoard is fully responsive with optimized layouts for:
 ## 🔧 Development
 
 ### Project Structure
+
 ```
 src/
 ├── app/                 # Next.js App Router pages
@@ -107,6 +120,7 @@ src/
 ```
 
 ### Scripts
+
 ```bash
 npm run dev       # Development server
 npm run build     # Production build
@@ -117,21 +131,25 @@ npm run lint      # Code linting
 ### Key Features Implemented
 
 #### 🏗️ **Step 1: API Integration**
+
 - Enhanced Financial Data API with intelligent caching
 - Dynamic data mapping for flexible API sources
 - Real-time market data integration
 
 #### 📈 **Step 2: Advanced Charts & Technical Analysis**
+
 - Professional candlestick charts
 - Technical indicators (RSI, MACD, Bollinger Bands)
 - Interactive chart annotations and drawing tools
 
-#### 🎨 **Step 3: User Interface & Experience** 
+#### 🎨 **Step 3: User Interface & Experience**
+
 - Customizable widget system with editable titles
 - Comprehensive responsive design framework
 - Loading states and error handling
 
 #### 💾 **Step 4: Data Persistence**
+
 - Browser storage integration with auto-save
 - Complete state recovery on page refresh
 - Backup/import system for configuration management
@@ -139,11 +157,13 @@ npm run lint      # Code linting
 ## � Deployment
 
 ### Vercel (Recommended)
+
 1. **Connect GitHub repository** to Vercel
 2. **Set environment variables** in Vercel dashboard
 3. **Deploy** - automatic builds on push
 
 ### Manual Deployment
+
 ```bash
 # Build for production
 npm run build
@@ -153,7 +173,9 @@ npm start
 ```
 
 ### Environment Setup
+
 Ensure these environment variables are set in production:
+
 - `NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY`
 
 ## 🤝 Contributing
@@ -185,4 +207,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ by [Akcthecoder200](https://github.com/Akcthecoder200)**
 
-*FinBoard - Your professional financial dashboard solution*
+_FinBoard - Your professional financial dashboard solution_
