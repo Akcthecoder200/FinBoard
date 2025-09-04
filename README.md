@@ -13,6 +13,9 @@
 🔗 **Live Demo:** [FinBoard on Vercel](https://fin-board-mocha.vercel.app/)
 
 ---
+## 📋 **Complete Guides**
+- **[📋 RECRUITER_TESTING_GUIDE.md](QUICK_START_RECRUITERS.md)** - Complete feature verification
+
 
 ## ✨ Features
 
@@ -459,6 +462,7 @@ _FinBoard - Your Professional Financial Dashboard Solution_
 ⭐ **Star this repository if you find it helpful!** ⭐
 
 </div>
+
 
 
 
