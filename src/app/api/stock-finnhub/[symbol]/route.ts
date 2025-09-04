@@ -8,14 +8,18 @@ export async function GET(
 ) {
   const { symbol } = await params;
   try {
-    if (!FINNHUB_API_KEY) {
-      throw new Error('Finnhub API key is missing. Set NEXT_PUBLIC_FINNHUB_API_KEY in your .env.local');
+    if (!FINNHUB_API_KEY || FINNHUB_API_KEY === 'your_finnhub_api_key_here') {
+      // Use demo mode with limited functionality
+      console.warn('Using Finnhub demo mode - limited functionality');
     }
-    const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
+    
+    const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY || 'demo'}`;
     const response = await fetch(url);
+    
     if (!response.ok) {
       throw new Error(`Finnhub API responded with ${response.status}`);
     }
+    
     const data = await response.json();
     if (!data.c) {
       throw new Error('No quote data found');

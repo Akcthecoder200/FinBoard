@@ -11,17 +11,29 @@ export async function GET(
     if (!INDIANAPI_KEY) {
       throw new Error('IndianAPI key is missing. Set NEXT_PUBLIC_INDIANAPI_KEY in your .env.local');
     }
+    
+    // Clean symbol for IndianAPI
+    const cleanSymbol = symbol.replace(/\.BO$|\.NS$|\.BSE$/i, '');
+    
     // Use the correct endpoint and header
-    const url = `https://stock.indianapi.in/stock?name=${encodeURIComponent(symbol.replace(/\+/g, ' '))}`;
+    const url = `https://stock.indianapi.in/stock?name=${encodeURIComponent(cleanSymbol)}`;
+    console.log(`Fetching IndianAPI data for: ${cleanSymbol}`);
+    
     const response = await fetch(url, {
       headers: {
-        'X-Api-Key': INDIANAPI_KEY
+        'X-Api-Key': INDIANAPI_KEY,
+        'Content-Type': 'application/json'
       }
     });
+    
     if (!response.ok) {
-      throw new Error(`IndianAPI responded with ${response.status}`);
+      const errorText = await response.text();
+      console.error(`IndianAPI error ${response.status}:`, errorText);
+      throw new Error(`IndianAPI responded with ${response.status}: ${errorText}`);
     }
+    
     const data = await response.json();
+    console.log('IndianAPI response:', data);
     // Map the response to StockData (adjust as needed for actual API response)
     const stockData = {
       symbol: symbol.toUpperCase(),

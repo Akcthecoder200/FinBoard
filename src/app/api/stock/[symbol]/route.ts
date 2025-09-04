@@ -7,8 +7,17 @@ export async function GET(
   const { symbol } = await params;
 
   try {
+    // Clean and format symbol for Yahoo Finance
+    let formattedSymbol = symbol.toUpperCase();
+    
+    // Handle special cases for symbol formatting
+    if (formattedSymbol.includes(' ')) {
+      // Replace spaces with appropriate formatting for Yahoo Finance
+      formattedSymbol = formattedSymbol.replace(/\s+/g, '-');
+    }
+    
     // Use Yahoo Finance API as a proxy
-    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol.toUpperCase()}`;
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${formattedSymbol}`;
     
     const response = await fetch(yahooUrl, {
       headers: {
