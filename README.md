@@ -4,7 +4,7 @@
 
 
 
-[![Vercel Deploy](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Akcthecoder200/FinBoard)
+
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.1.0-blue)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
@@ -459,5 +459,6 @@ _FinBoard - Your Professional Financial Dashboard Solution_
 ⭐ **Star this repository if you find it helpful!** ⭐
 
 </div>
+
 
 
