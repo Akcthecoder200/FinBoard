@@ -15,7 +15,7 @@ interface WidgetFormData {
   symbol: string;
   symbols: string[];
   refreshInterval: number;
-  displayType: "stock" | "crypto" | "market-overview" | "portfolio";
+  displayType: "stock" | "crypto" | "market-overview" | "portfolio" | "chart";
   selectedFields: string[];
   description: string;
 }
@@ -97,7 +97,12 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
     switch (formData.displayType) {
       case "stock":
       case "crypto":
+      case "chart":
         baseConfig.symbol = formData.symbol;
+        if (formData.displayType === "chart") {
+          baseConfig.chartType = "line";
+          baseConfig.timeRange = "1D";
+        }
         break;
       case "portfolio":
         baseConfig.symbols = formData.symbols;
@@ -139,7 +144,8 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
       case 2:
         if (
           formData.displayType === "stock" ||
-          formData.displayType === "crypto"
+          formData.displayType === "crypto" ||
+          formData.displayType === "chart"
         ) {
           return formData.symbol.trim().length > 0;
         }
@@ -298,12 +304,15 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
           {currentStep === 2 && (
             <div className="space-y-6">
               {(formData.displayType === "stock" ||
-                formData.displayType === "crypto") && (
+                formData.displayType === "crypto" ||
+                formData.displayType === "chart") && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     {formData.displayType === "stock"
                       ? "Stock Symbol"
-                      : "Cryptocurrency Symbol"}{" "}
+                      : formData.displayType === "crypto"
+                      ? "Cryptocurrency Symbol"
+                      : "Chart Symbol"}{" "}
                     *
                   </label>
                   <input
@@ -315,7 +324,9 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                     placeholder={
                       formData.displayType === "stock"
                         ? "AAPL, GOOGL, MSFT..."
-                        : "BTC, ETH, ADA..."
+                        : formData.displayType === "crypto"
+                        ? "BTC, ETH, ADA..."
+                        : "AAPL, TSLA, MSFT..."
                     }
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
@@ -323,7 +334,9 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                     Enter the{" "}
                     {formData.displayType === "stock"
                       ? "stock ticker"
-                      : "crypto"}{" "}
+                      : formData.displayType === "crypto"
+                      ? "crypto"
+                      : "symbol"}{" "}
                     symbol you want to track
                   </p>
                 </div>
@@ -449,7 +462,7 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                   {[
                     {
                       type: "stock",
-                      icon: "�",
+                      icon: "📈",
                       title: "Stock Tracker",
                       desc: "Real-time stock data",
                     },
@@ -467,9 +480,15 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                     },
                     {
                       type: "portfolio",
-                      icon: "�",
+                      icon: "💼",
                       title: "Portfolio",
                       desc: "Multiple stocks view",
+                    },
+                    {
+                      type: "chart",
+                      icon: "📊",
+                      title: "Interactive Chart",
+                      desc: "Price charts & analysis",
                     },
                   ].map((option) => (
                     <button
@@ -548,7 +567,8 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                     </span>
                   </div>
                   {(formData.displayType === "stock" ||
-                    formData.displayType === "crypto") && (
+                    formData.displayType === "crypto" ||
+                    formData.displayType === "chart") && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Symbol:</span>
                       <span className="font-mono text-xs bg-background px-2 py-1 rounded">

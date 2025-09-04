@@ -2,6 +2,7 @@
 
 import { Widget } from "@/store/slices/widgetsSlice";
 import { useWidgetData } from "@/hooks/useFinancialData";
+import ChartWidget from "./ChartWidget";
 import {
   formatCurrency,
   formatPercentage,
@@ -60,13 +61,15 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
   const getWidgetIcon = (type: string) => {
     switch (type) {
       case "stock":
-        return "�";
+        return "📈";
       case "crypto":
         return "₿";
       case "market-overview":
         return "🌐";
       case "portfolio":
-        return "�";
+        return "💼";
+      case "chart":
+        return "📊";
       default:
         return "📋";
     }
@@ -87,6 +90,10 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
       case "portfolio":
         const symbols = widget.config?.symbols as string[];
         return `Portfolio tracking ${symbols?.length || 0} symbols`;
+      case "chart":
+        return `Interactive chart for ${
+          (widget.config?.symbol as string) || "symbol"
+        }`;
       default:
         return "Custom financial widget";
     }
@@ -371,6 +378,17 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
         return renderMarketData();
       case "portfolio":
         return renderPortfolioData();
+      case "chart":
+        return (
+          <ChartWidget
+            symbol={(widget.config?.symbol as string) || "AAPL"}
+            title={widget.title}
+            chartType={(widget.config?.chartType as "line" | "area" | "volume") || "line"}
+            timeRange={(widget.config?.timeRange as "1D" | "5D" | "1M" | "3M" | "6M" | "1Y") || "1D"}
+            height={300}
+            refreshInterval={60000}
+          />
+        );
       default:
         return (
           <div className="text-center py-6 text-muted-foreground text-sm">
