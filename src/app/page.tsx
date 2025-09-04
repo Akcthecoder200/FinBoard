@@ -5,8 +5,14 @@ import { RootState } from '@/store';
 import { WidgetContainer } from '@/components/widgets/WidgetContainer';
 import PortfolioWidget from '@/components/widgets/PortfolioWidget';
 import AnnotatedChart from '@/components/charts/AnnotatedChart';
+import TechnicalIndicators from '@/components/charts/TechnicalIndicators';
+import MarketScanner from '@/components/market/MarketScanner';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { useWidgetPersistence } from '@/hooks/useWidgetPersistence';
 import { useState, useEffect } from 'react';
+
+// Import console utilities to suppress noise in development
+import '@/utils/consoleUtils';
 
 interface ChartAnnotation {
   id: string;
@@ -322,8 +328,44 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Professional Trading Tools */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+            {/* Technical Analysis */}
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Advanced Technical Analysis</h3>
+              <ErrorBoundary fallback={
+                <div className="p-4 border border-amber-200 rounded-lg bg-amber-50">
+                  <p className="text-amber-800">Technical Analysis component is temporarily unavailable.</p>
+                </div>
+              }>
+                <TechnicalIndicators
+                  symbol="AAPL"
+                  height={600}
+                  showIndicators={['SMA', 'RSI', 'MACD']}
+                  timeframe="3M"
+                />
+              </ErrorBoundary>
+            </div>
+
+            {/* Market Scanner */}
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Real-time Market Scanner</h3>
+              <ErrorBoundary fallback={
+                <div className="p-4 border border-amber-200 rounded-lg bg-amber-50">
+                  <p className="text-amber-800">Market Scanner is temporarily unavailable.</p>
+                </div>
+              }>
+                <MarketScanner
+                  height={600}
+                  maxResults={30}
+                  refreshInterval={30000}
+                />
+              </ErrorBoundary>
+            </div>
+          </div>
+
           {/* Features Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
             <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 p-6 rounded-lg border border-blue-500/20">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-xl">
@@ -335,7 +377,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                Advanced candlestick charts with OHLC data, volume indicators, and real-time updates for professional trading analysis.
+                Advanced candlestick charts with OHLC data and real-time updates.
               </p>
             </div>
 
@@ -350,7 +392,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                Track your portfolio performance with real-time P&L calculations, allocation views, and historical performance charts.
+                Real-time P&L calculations and performance analytics.
               </p>
             </div>
 
@@ -365,7 +407,37 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                Add interactive annotations, trend lines, and notes directly on charts for enhanced technical analysis.
+                Add annotations and trend lines directly on charts.
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 p-6 rounded-lg border border-orange-500/20">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-white text-xl">
+                  📈
+                </div>
+                <div className="ml-4">
+                  <h4 className="font-semibold text-foreground">Technical Analysis</h4>
+                  <p className="text-sm text-muted-foreground">Advanced indicators</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                RSI, MACD, Bollinger Bands, and moving averages.
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-red-500/10 to-red-600/10 p-6 rounded-lg border border-red-500/20">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white text-xl">
+                  🔍
+                </div>
+                <div className="ml-4">
+                  <h4 className="font-semibold text-foreground">Market Scanner</h4>
+                  <p className="text-sm text-muted-foreground">Real-time opportunities</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Scan markets for gainers, losers, and breakouts.
               </p>
             </div>
           </div>

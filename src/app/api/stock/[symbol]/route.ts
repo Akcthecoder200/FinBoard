@@ -26,7 +26,18 @@ export async function GET(
     });
 
     if (!response.ok) {
-      throw new Error(`Yahoo Finance API responded with ${response.status}`);
+      // Return a structured error response instead of throwing
+      console.warn(`Yahoo Finance API responded with ${response.status} for symbol: ${symbol}`);
+      
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Stock symbol "${symbol}" not found or unavailable`,
+          code: 'SYMBOL_NOT_FOUND',
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
     }
 
     const data = await response.json();
