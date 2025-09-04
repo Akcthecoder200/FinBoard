@@ -1,5 +1,5 @@
-import React from 'react';
-import ChartWidget from './ChartWidget';
+import React from "react";
+import ChartWidget from "./ChartWidget";
 
 const ChartWidgetDemo: React.FC = () => {
   return (
@@ -10,7 +10,8 @@ const ChartWidgetDemo: React.FC = () => {
             📊 Interactive Chart Widget Demo
           </h1>
           <p className="text-muted-foreground">
-            Experience real-time financial charts with multiple visualization types
+            Experience real-time financial charts with multiple visualization
+            types
           </p>
         </div>
 
@@ -100,7 +101,7 @@ const ChartWidgetDemo: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3 p-3 bg-secondary/20 rounded-lg">
                 <div className="text-green-500 mt-1">✅</div>
                 <div>
@@ -110,7 +111,7 @@ const ChartWidgetDemo: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3 p-3 bg-secondary/20 rounded-lg">
                 <div className="text-green-500 mt-1">✅</div>
                 <div>
@@ -120,7 +121,7 @@ const ChartWidgetDemo: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3 p-3 bg-secondary/20 rounded-lg">
                 <div className="text-green-500 mt-1">✅</div>
                 <div>
@@ -130,7 +131,7 @@ const ChartWidgetDemo: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3 p-3 bg-secondary/20 rounded-lg">
                 <div className="text-green-500 mt-1">✅</div>
                 <div>
@@ -140,7 +141,7 @@ const ChartWidgetDemo: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3 p-3 bg-secondary/20 rounded-lg">
                 <div className="text-green-500 mt-1">✅</div>
                 <div>
@@ -164,31 +165,39 @@ const ChartWidgetDemo: React.FC = () => {
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="font-medium">Yahoo Finance API</span>
                 </div>
-                <span className="text-green-600 text-sm font-medium">✅ Working</span>
+                <span className="text-green-600 text-sm font-medium">
+                  ✅ Working
+                </span>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="font-medium">Alpha Vantage API</span>
                 </div>
-                <span className="text-green-600 text-sm font-medium">✅ Working</span>
+                <span className="text-green-600 text-sm font-medium">
+                  ✅ Working
+                </span>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                   <span className="font-medium">Finnhub API</span>
                 </div>
-                <span className="text-yellow-600 text-sm font-medium">⚠️ Demo Mode</span>
+                <span className="text-yellow-600 text-sm font-medium">
+                  ⚠️ Demo Mode
+                </span>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                   <span className="font-medium">IndianAPI</span>
                 </div>
-                <span className="text-red-600 text-sm font-medium">❌ Auth Required</span>
+                <span className="text-red-600 text-sm font-medium">
+                  ❌ Auth Required
+                </span>
               </div>
             </div>
           </div>

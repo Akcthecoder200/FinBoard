@@ -383,8 +383,18 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
           <ChartWidget
             symbol={(widget.config?.symbol as string) || "AAPL"}
             title={widget.title}
-            chartType={(widget.config?.chartType as "line" | "area" | "volume") || "line"}
-            timeRange={(widget.config?.timeRange as "1D" | "5D" | "1M" | "3M" | "6M" | "1Y") || "1D"}
+            chartType={
+              (widget.config?.chartType as "line" | "area" | "volume") || "line"
+            }
+            timeRange={
+              (widget.config?.timeRange as
+                | "1D"
+                | "5D"
+                | "1M"
+                | "3M"
+                | "6M"
+                | "1Y") || "1D"
+            }
             height={300}
             refreshInterval={60000}
           />

@@ -3,13 +3,58 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { WidgetContainer } from '@/components/widgets/WidgetContainer';
+import PortfolioWidget from '@/components/widgets/PortfolioWidget';
+import AnnotatedChart from '@/components/charts/AnnotatedChart';
 import { useWidgetPersistence } from '@/hooks/useWidgetPersistence';
 import { useState, useEffect } from 'react';
+
+interface ChartAnnotation {
+  id: string;
+  type: 'line' | 'area' | 'point' | 'text';
+  x?: number | string;
+  y?: number;
+  x1?: number | string;
+  y1?: number;
+  x2?: number | string;
+  y2?: number;
+  color: string;
+  label?: string;
+  description?: string;
+  timestamp: number;
+}
+
+// Sample data for demo charts
+const generateSampleData = () => {
+  const data = [];
+  const today = new Date();
+  
+  for (let i = 30; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    
+    // Generate realistic stock price movement
+    const basePrice = 150;
+    const volatility = 0.02;
+    const trend = 0.001;
+    const randomChange = (Math.random() - 0.5) * 2 * volatility + trend;
+    const price = basePrice * (1 + randomChange * i / 10);
+    
+    data.push({
+      date: date.toISOString().split('T')[0],
+      price: Number(price.toFixed(2)),
+      volume: Math.floor(Math.random() * 1000000) + 500000
+    });
+  }
+  
+  return data;
+};
 
 export default function Home() {
   const widgets = useSelector((state: RootState) => state.widgets.widgets);
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [mounted, setMounted] = useState(false);
+  const [annotations, setAnnotations] = useState<ChartAnnotation[]>([]);
+  const [sampleData] = useState(() => generateSampleData());
 
   // Initialize widget persistence
   useWidgetPersistence();
@@ -234,6 +279,95 @@ export default function Home() {
               <span className="text-sm text-muted-foreground">Customize your dashboard</span>
             </div>
             <WidgetContainer />
+          </div>
+
+          {/* Advanced Features Section */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+            {/* Portfolio Performance Widget */}
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Portfolio Performance & P&L</h3>
+              <PortfolioWidget 
+                holdings={[
+                  { symbol: 'AAPL', quantity: 10, avgCost: 150 },
+                  { symbol: 'GOOGL', quantity: 5, avgCost: 2800 },
+                  { symbol: 'MSFT', quantity: 8, avgCost: 320 },
+                  { symbol: 'TSLA', quantity: 3, avgCost: 800 },
+                  { symbol: 'NVDA', quantity: 4, avgCost: 400 }
+                ]}
+                height={500}
+                showDetailed={true}
+              />
+            </div>
+
+            {/* Interactive Chart with Annotations */}
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Interactive Chart with Annotations</h3>
+              <AnnotatedChart
+                data={sampleData}
+                dataKey="price"
+                xKey="date"
+                height={500}
+                enableDrawing={true}
+                showGrid={true}
+                showTooltip={true}
+                annotations={annotations}
+                onAnnotationAdd={(annotation) => setAnnotations(prev => [...prev, annotation])}
+                onAnnotationUpdate={(annotation) => setAnnotations(prev => 
+                  prev.map(ann => ann.id === annotation.id ? annotation : ann)
+                )}
+                onAnnotationDelete={(annotationId) => setAnnotations(prev => 
+                  prev.filter(ann => ann.id !== annotationId)
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Features Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 p-6 rounded-lg border border-blue-500/20">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-xl">
+                  📊
+                </div>
+                <div className="ml-4">
+                  <h4 className="font-semibold text-foreground">Candlestick Charts</h4>
+                  <p className="text-sm text-muted-foreground">Professional OHLC visualization</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Advanced candlestick charts with OHLC data, volume indicators, and real-time updates for professional trading analysis.
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 p-6 rounded-lg border border-green-500/20">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white text-xl">
+                  💼
+                </div>
+                <div className="ml-4">
+                  <h4 className="font-semibold text-foreground">Portfolio Tracking</h4>
+                  <p className="text-sm text-muted-foreground">Complete P&L analysis</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Track your portfolio performance with real-time P&L calculations, allocation views, and historical performance charts.
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 p-6 rounded-lg border border-purple-500/20">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white text-xl">
+                  ✏️
+                </div>
+                <div className="ml-4">
+                  <h4 className="font-semibold text-foreground">Chart Annotations</h4>
+                  <p className="text-sm text-muted-foreground">Interactive drawing tools</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Add interactive annotations, trend lines, and notes directly on charts for enhanced technical analysis.
+              </p>
+            </div>
           </div>
 
           {/* Status Card */}
