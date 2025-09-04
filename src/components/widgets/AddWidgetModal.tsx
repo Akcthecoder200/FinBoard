@@ -184,9 +184,9 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
               Add New Widget
@@ -216,7 +216,7 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
         </div>
 
         {/* Progress Steps */}
-        <div className="px-6 py-4 bg-secondary/20">
+        <div className="px-6 py-4 bg-secondary/20 flex-shrink-0">
           <div className="flex items-center justify-between">
             {Array.from({ length: totalSteps }, (_, i) => (
               <div key={i} className="flex items-center">
@@ -252,7 +252,7 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
           {/* Step 1: Widget Details */}
           {currentStep === 1 && (
             <div className="space-y-6">
@@ -684,7 +684,7 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-border">
+        <div className="flex items-center justify-between p-6 border-t border-border flex-shrink-0 bg-card">
           <div className="flex gap-2">
             {currentStep > 1 && (
               <button
