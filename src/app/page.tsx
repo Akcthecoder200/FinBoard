@@ -8,16 +8,17 @@ import AnnotatedChart from "@/components/charts/AnnotatedChart";
 import TechnicalIndicators from "@/components/charts/TechnicalIndicators";
 import MarketScanner from "@/components/market/MarketScanner";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
-import { 
-  ResponsiveContainer, 
-  ResponsiveGrid, 
-  BreakpointDisplay, 
+import {
+  ResponsiveContainer,
+  ResponsiveGrid,
+  BreakpointDisplay,
   Stack,
   Flex,
-  useBreakpoint 
 } from "@/components/layout/ResponsiveLayout";
 import { StatusBadge } from "@/components/ui/LoadingStates";
 import { useWidgetPersistence } from "@/hooks/useWidgetPersistence";
+import { usePersistence } from "@/providers/PersistenceProvider";
+import Settings from "@/components/Settings";
 import { useState, useEffect } from "react";
 
 // Import console utilities to suppress noise in development
@@ -72,12 +73,14 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [annotations, setAnnotations] = useState<ChartAnnotation[]>([]);
   const [sampleData] = useState(() => generateSampleData());
-  
-  // Get current breakpoint for responsive features
-  const breakpoint = useBreakpoint();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Initialize widget persistence
   useWidgetPersistence();
+
+  // Get persistence status
+  const { isPersistenceEnabled, lastSyncTime, storageStatus } =
+    usePersistence();
 
   // Load saved theme on mount
   useEffect(() => {
@@ -153,7 +156,7 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar - Hide on mobile */}
-      <BreakpointDisplay hide={['xs', 'sm']}>
+      <BreakpointDisplay hide={["xs", "sm"]}>
         <div className="w-64 bg-card border-r border-border flex flex-col">
           <div className="p-6 border-b border-border">
             <h1 className="text-2xl font-bold text-foreground">FinBoard</h1>
@@ -199,13 +202,13 @@ export default function Home() {
                 </a>
               </li>
               <li>
-                <a
-                  href="#"
-                  className="flex items-center px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg"
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="flex items-center w-full px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg"
                 >
                   <span className="w-5 h-5 mr-3">⚙️</span>
                   Settings
-                </a>
+                </button>
               </li>
             </ul>
           </nav>
@@ -264,13 +267,24 @@ export default function Home() {
               </Stack>
               <Flex align="center" gap="lg">
                 <div className="text-sm text-muted-foreground">
-                  <StatusBadge 
-                    status="success" 
+                  <StatusBadge
+                    status={isPersistenceEnabled ? "success" : "error"}
+                    label={
+                      isPersistenceEnabled
+                        ? "Auto-save enabled"
+                        : "Auto-save disabled"
+                    }
+                    size="sm"
+                  />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <StatusBadge
+                    status="success"
                     label={`${getEffectiveTheme()} theme`}
                     size="sm"
                   />
                 </div>
-                <BreakpointDisplay hide={['xs']}>
+                <BreakpointDisplay hide={["xs"]}>
                   <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
                     + Add Widget
                   </button>
@@ -292,7 +306,9 @@ export default function Home() {
               <div className="bg-card p-6 rounded-lg border border-border">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Balance</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Balance
+                    </p>
                     <p className="text-2xl font-bold text-foreground">
                       $24,532.50
                     </p>
@@ -310,7 +326,9 @@ export default function Home() {
                     <p className="text-sm text-muted-foreground">
                       Today&apos;s Gain
                     </p>
-                    <p className="text-2xl font-bold text-green-500">+$342.15</p>
+                    <p className="text-2xl font-bold text-green-500">
+                      +$342.15
+                    </p>
                   </div>
                   <div className="text-green-500">💰</div>
                 </div>
@@ -578,48 +596,51 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-foreground mb-4">
                 System Status
               </h3>
-              <ResponsiveGrid
-                columns={{ xs: 1, md: 2 }}
-                gap="md"
-              >
+              <ResponsiveGrid columns={{ xs: 1, md: 2 }} gap="md">
                 <Stack spacing="sm">
                   <p className="text-muted-foreground">
-                    Current theme:{" "}
+                    Storage status:{" "}
                     <span className="font-mono text-foreground">
-                      {getEffectiveTheme()}
+                      {storageStatus.isSupported ? "Available" : "Unavailable"}
                     </span>
                   </p>
                   <p className="text-muted-foreground">
-                    Theme setting:{" "}
-                    <span className="font-mono text-foreground">
-                      {currentTheme}
+                    Persistence:{" "}
+                    <span
+                      className={`font-mono ${
+                        isPersistenceEnabled ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {isPersistenceEnabled ? "Enabled" : "Disabled"}
                     </span>
                   </p>
                   <p className="text-muted-foreground">
-                    Widgets count:{" "}
+                    Last sync:{" "}
                     <span className="font-mono text-foreground">
-                      {widgets.length}
+                      {lastSyncTime
+                        ? lastSyncTime.toLocaleTimeString()
+                        : "Never"}
                     </span>
                   </p>
                   <p className="text-muted-foreground">
-                    Screen size:{" "}
+                    Storage usage:{" "}
                     <span className="font-mono text-foreground">
-                      {breakpoint.breakpoint}
+                      {storageStatus.storageUsage.percentage.toFixed(1)}%
                     </span>
                   </p>
                 </Stack>
                 <Stack spacing="sm">
                   <p className="text-green-600 font-medium">
-                    ✅ Step 3 UI/UX Complete!
+                    ✅ Step 4 Data Persistence Complete!
                   </p>
                   <p className="text-blue-600 font-medium">
-                    🎨 Responsive design working!
+                    💾 Browser storage integrated!
                   </p>
                   <p className="text-purple-600 font-medium">
-                    🏗️ Customizable widgets ready!
+                    🔄 Auto-recovery implemented!
                   </p>
                   <p className="text-orange-600 font-medium">
-                    📱 Multi-screen support active!
+                    � Backup/Import available!
                   </p>
                 </Stack>
               </ResponsiveGrid>
@@ -627,6 +648,12 @@ export default function Home() {
           </ResponsiveContainer>
         </main>
       </div>
+
+      {/* Settings Modal */}
+      <Settings
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }

@@ -2,7 +2,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Widget {
   id: string;
-  type: "table" | "chart" | "card" | "stock" | "crypto" | "market-overview" | "portfolio";
+  type:
+    | "table"
+    | "chart"
+    | "card"
+    | "stock"
+    | "crypto"
+    | "market-overview"
+    | "portfolio";
   title: string;
   position: { x: number; y: number };
   size: { width: number; height: number };
@@ -51,6 +58,11 @@ const widgetsSlice = createSlice({
     hydrateWidgets: (state) => {
       state.widgets = loadWidgetsFromStorage();
     },
+    // Action to set all widgets at once (for persistence)
+    setWidgets: (state, action: PayloadAction<Widget[]>) => {
+      state.widgets = action.payload;
+      saveWidgetsToStorage(state.widgets);
+    },
     addWidget: (state, action: PayloadAction<Widget>) => {
       state.widgets.push(action.payload);
       saveWidgetsToStorage(state.widgets);
@@ -87,6 +99,7 @@ const widgetsSlice = createSlice({
 
 export const {
   hydrateWidgets,
+  setWidgets,
   addWidget,
   removeWidget,
   updateWidget,

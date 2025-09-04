@@ -99,7 +99,7 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
         }`;
       case "table":
         const tableSymbols = widget.config?.symbols as string[];
-        return `Stock table with ${tableSymbols?.length || 'default'} symbols`;
+        return `Stock table with ${tableSymbols?.length || "default"} symbols`;
       default:
         return "Custom financial widget";
     }

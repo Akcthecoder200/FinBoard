@@ -15,7 +15,13 @@ interface WidgetFormData {
   symbol: string;
   symbols: string[];
   refreshInterval: number;
-  displayType: "stock" | "crypto" | "market-overview" | "portfolio" | "chart" | "table";
+  displayType:
+    | "stock"
+    | "crypto"
+    | "market-overview"
+    | "portfolio"
+    | "chart"
+    | "table";
   selectedFields: string[];
   description: string;
 }
@@ -108,7 +114,8 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
         baseConfig.symbols = formData.symbols;
         break;
       case "table":
-        baseConfig.symbols = formData.symbols.length > 0 ? formData.symbols : undefined;
+        baseConfig.symbols =
+          formData.symbols.length > 0 ? formData.symbols : undefined;
         baseConfig.pageSize = 10;
         baseConfig.showFilters = true;
         break;
@@ -420,14 +427,15 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                         e.target.value
                           .split(",")
                           .map((s) => s.trim().toUpperCase())
-                          .filter(s => s.length > 0)
+                          .filter((s) => s.length > 0)
                       )
                     }
                     placeholder="AAPL, GOOGL, MSFT, TSLA (leave empty for default list)"
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Enter specific stock symbols for the table, or leave empty to use a default list of popular stocks
+                    Enter specific stock symbols for the table, or leave empty
+                    to use a default list of popular stocks
                   </p>
                 </div>
               )}

@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store';
-import { removeWidget, clearAllWidgets, reorderWidgets } from '@/store/slices/widgetsSlice';
-import CustomizableWidgetCard from './CustomizableWidgetCard';
-import { AddWidgetModal } from './AddWidgetModal';
-import { useState } from 'react';
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store";
+import {
+  removeWidget,
+  clearAllWidgets,
+  reorderWidgets,
+} from "@/store/slices/widgetsSlice";
+import CustomizableWidgetCard from "./CustomizableWidgetCard";
+import { AddWidgetModal } from "./AddWidgetModal";
+import { useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -14,24 +18,30 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
-import { Widget } from '@/store/slices/widgetsSlice';
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { Widget } from "@/store/slices/widgetsSlice";
 
 interface WidgetContainerProps {
   className?: string;
 }
 
 // Sortable wrapper component for individual widgets
-function SortableWidget({ id, widget, onRemove }: { id: string; widget: Widget; onRemove: () => void }) {
+function SortableWidget({
+  id,
+  widget,
+  onRemove,
+}: {
+  id: string;
+  widget: Widget;
+  onRemove: () => void;
+}) {
   const {
     attributes,
     listeners,
@@ -42,7 +52,9 @@ function SortableWidget({ id, widget, onRemove }: { id: string; widget: Widget; 
   } = useSortable({ id });
 
   const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
@@ -56,7 +68,11 @@ function SortableWidget({ id, widget, onRemove }: { id: string; widget: Widget; 
           className="absolute top-2 right-12 z-10 p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
           title="Drag to reorder"
         >
-          <svg className="w-4 h-4 text-muted-foreground hover:text-foreground" fill="currentColor" viewBox="0 0 20 20">
+          <svg
+            className="w-4 h-4 text-muted-foreground hover:text-foreground"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
             <path d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"></path>
           </svg>
         </div>
@@ -66,7 +82,7 @@ function SortableWidget({ id, widget, onRemove }: { id: string; widget: Widget; 
   );
 }
 
-export function WidgetContainer({ className = '' }: WidgetContainerProps) {
+export function WidgetContainer({ className = "" }: WidgetContainerProps) {
   const dispatch = useDispatch();
   const widgets = useSelector((state: RootState) => state.widgets.widgets);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,7 +100,11 @@ export function WidgetContainer({ className = '' }: WidgetContainerProps) {
   };
 
   const handleClearAll = () => {
-    if (confirm('Are you sure you want to remove all widgets? This action cannot be undone.')) {
+    if (
+      confirm(
+        "Are you sure you want to remove all widgets? This action cannot be undone."
+      )
+    ) {
       dispatch(clearAllWidgets());
     }
   };
@@ -108,18 +128,30 @@ export function WidgetContainer({ className = '' }: WidgetContainerProps) {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h4 className="font-semibold text-foreground">Add New Widget</h4>
-            <p className="text-sm text-muted-foreground">Configure widgets with custom data sources and display options</p>
+            <p className="text-sm text-muted-foreground">
+              Configure widgets with custom data sources and display options
+            </p>
           </div>
           <div className="text-2xl">🎛️</div>
         </div>
-        
+
         <div className="text-center">
           <button
             onClick={() => setIsModalOpen(true)}
             className="inline-flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             <span className="font-medium">Add New Widget</span>
           </button>
@@ -133,17 +165,29 @@ export function WidgetContainer({ className = '' }: WidgetContainerProps) {
       {widgets.length === 0 ? (
         <div className="bg-card border-2 border-dashed border-border rounded-lg p-12 text-center">
           <div className="text-6xl mb-4 opacity-50">📊</div>
-          <h3 className="text-xl font-semibold text-foreground mb-2">Your Dashboard is Empty</h3>
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            Your Dashboard is Empty
+          </h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Start building your personalized finance dashboard by creating your first widget 
-            with custom data sources and display options.
+            Start building your personalized finance dashboard by creating your
+            first widget with custom data sources and display options.
           </p>
           <button
             onClick={() => setIsModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Create Your First Widget
           </button>
@@ -156,15 +200,24 @@ export function WidgetContainer({ className = '' }: WidgetContainerProps) {
         >
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold text-foreground">Active Widgets ({widgets.length})</h4>
+              <h4 className="font-semibold text-foreground">
+                Active Widgets ({widgets.length})
+              </h4>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"></path>
                 </svg>
                 Drag to reorder widgets
               </div>
             </div>
-            <SortableContext items={widgets.map(w => w.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext
+              items={widgets.map((w) => w.id)}
+              strategy={verticalListSortingStrategy}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {widgets.map((widget) => (
                   <SortableWidget
@@ -186,17 +239,22 @@ export function WidgetContainer({ className = '' }: WidgetContainerProps) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground">
-                Total widgets: <span className="font-mono text-foreground font-semibold">{widgets.length}</span>
+                Total widgets:{" "}
+                <span className="font-mono text-foreground font-semibold">
+                  {widgets.length}
+                </span>
               </span>
               <span className="text-muted-foreground">
-                Types: <span className="font-mono text-foreground">
-                  {Array.from(new Set(widgets.map(w => w.type))).join(', ')}
+                Types:{" "}
+                <span className="font-mono text-foreground">
+                  {Array.from(new Set(widgets.map((w) => w.type))).join(", ")}
                 </span>
               </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">
-                Dashboard utilization: <span className="text-primary font-semibold">
+                Dashboard utilization:{" "}
+                <span className="text-primary font-semibold">
                   {Math.min(100, Math.round((widgets.length / 12) * 100))}%
                 </span>
               </span>
@@ -213,9 +271,9 @@ export function WidgetContainer({ className = '' }: WidgetContainerProps) {
       )}
 
       {/* Add Widget Modal */}
-      <AddWidgetModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <AddWidgetModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
     </div>
   );

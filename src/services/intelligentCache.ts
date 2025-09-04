@@ -42,7 +42,7 @@ class IntelligentCacheService {
     totalHits: 0,
     totalMisses: 0,
     oldestEntry: null,
-    newestEntry: null
+    newestEntry: null,
   };
 
   private config: CacheConfig = {
@@ -50,7 +50,7 @@ class IntelligentCacheService {
     maxEntries: 1000,
     defaultTtl: 5 * 60 * 1000, // 5 minutes
     enableCompression: true,
-    enableMetrics: true
+    enableMetrics: true,
   };
 
   constructor(config?: Partial<CacheConfig>) {
@@ -73,7 +73,7 @@ class IntelligentCacheService {
     }
   ): Promise<T> {
     const cacheKey = this.normalizeKey(key);
-    
+
     this.stats.totalRequests++;
 
     // Check for force refresh
@@ -89,8 +89,10 @@ class IntelligentCacheService {
       cached.accessCount++;
       cached.lastAccessed = new Date();
       this.updateStats();
-      
-      console.log(`✅ Cache hit for ${cacheKey} (accessed ${cached.accessCount} times)`);
+
+      console.log(
+        `✅ Cache hit for ${cacheKey} (accessed ${cached.accessCount} times)`
+      );
       return cached.data as T;
     }
 
@@ -127,7 +129,7 @@ class IntelligentCacheService {
 
       this.set(key, data, ttl, tags);
       console.log(`💾 Cached new data for ${key} (TTL: ${ttl}ms)`);
-      
+
       return data;
     } finally {
       this.pendingRequests.delete(key);
@@ -151,7 +153,7 @@ class IntelligentCacheService {
       accessCount: 1,
       lastAccessed: new Date(),
       size,
-      tags
+      tags,
     };
 
     this.cache.set(cacheKey, entry);
@@ -192,9 +194,9 @@ class IntelligentCacheService {
   // Clear cache by tags
   invalidateByTags(tags: string[]): number {
     let deletedCount = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
-      if (entry.tags.some(tag => tags.includes(tag))) {
+      if (entry.tags.some((tag) => tags.includes(tag))) {
         this.cache.delete(key);
         deletedCount++;
       }
@@ -202,7 +204,11 @@ class IntelligentCacheService {
 
     if (deletedCount > 0) {
       this.updateStats();
-      console.log(`🗑️ Invalidated ${deletedCount} cache entries by tags: ${tags.join(', ')}`);
+      console.log(
+        `🗑️ Invalidated ${deletedCount} cache entries by tags: ${tags.join(
+          ", "
+        )}`
+      );
     }
 
     return deletedCount;
@@ -213,7 +219,7 @@ class IntelligentCacheService {
     this.cache.clear();
     this.pendingRequests.clear();
     this.updateStats();
-    console.log('🗑️ Cache cleared');
+    console.log("🗑️ Cache cleared");
   }
 
   // Get cache statistics
@@ -229,7 +235,7 @@ class IntelligentCacheService {
   // Update cache configuration
   updateConfig(newConfig: Partial<CacheConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('⚙️ Cache configuration updated', this.config);
+    console.log("⚙️ Cache configuration updated", this.config);
   }
 
   // Get all cache keys
@@ -251,7 +257,7 @@ class IntelligentCacheService {
   private isExpired(entry: CacheEntry): boolean {
     const now = Date.now();
     const entryTime = entry.timestamp.getTime();
-    return (now - entryTime) > entry.ttl;
+    return now - entryTime > entry.ttl;
   }
 
   // Estimate size of data in bytes
@@ -261,10 +267,10 @@ class IntelligentCacheService {
       return new Blob([jsonString]).size;
     } catch {
       // Fallback estimation
-      if (typeof data === 'string') return data.length * 2;
-      if (typeof data === 'number') return 8;
-      if (typeof data === 'boolean') return 4;
-      if (typeof data === 'object') return 1024; // Rough estimate
+      if (typeof data === "string") return data.length * 2;
+      if (typeof data === "number") return 8;
+      if (typeof data === "boolean") return 4;
+      if (typeof data === "object") return 1024; // Rough estimate
       return 100; // Default estimate
     }
   }
@@ -272,11 +278,14 @@ class IntelligentCacheService {
   // Make space in cache if needed
   private makeSpace(requiredSize: number): void {
     // Check if we need to make space
-    if (this.stats.totalEntries >= this.config.maxEntries || 
-        this.stats.totalSize + requiredSize > this.config.maxSize) {
-      
-      console.log(`🧹 Making space in cache (entries: ${this.stats.totalEntries}/${this.config.maxEntries}, size: ${this.stats.totalSize}/${this.config.maxSize})`);
-      
+    if (
+      this.stats.totalEntries >= this.config.maxEntries ||
+      this.stats.totalSize + requiredSize > this.config.maxSize
+    ) {
+      console.log(
+        `🧹 Making space in cache (entries: ${this.stats.totalEntries}/${this.config.maxEntries}, size: ${this.stats.totalSize}/${this.config.maxSize})`
+      );
+
       this.evictLeastRecentlyUsed();
     }
   }
@@ -284,13 +293,15 @@ class IntelligentCacheService {
   // Evict least recently used entries
   private evictLeastRecentlyUsed(): void {
     const entries = Array.from(this.cache.entries());
-    
+
     // Sort by last accessed time (oldest first)
-    entries.sort(([, a], [, b]) => a.lastAccessed.getTime() - b.lastAccessed.getTime());
+    entries.sort(
+      ([, a], [, b]) => a.lastAccessed.getTime() - b.lastAccessed.getTime()
+    );
 
     // Remove oldest 25% of entries
     const entriesToRemove = Math.ceil(entries.length * 0.25);
-    
+
     for (let i = 0; i < entriesToRemove; i++) {
       const [key] = entries[i];
       this.cache.delete(key);
@@ -302,18 +313,25 @@ class IntelligentCacheService {
   // Update cache statistics
   private updateStats(): void {
     this.stats.totalEntries = this.cache.size;
-    this.stats.totalSize = Array.from(this.cache.values())
-      .reduce((total, entry) => total + entry.size, 0);
-    
-    this.stats.hitRate = this.stats.totalRequests > 0 
-      ? (this.stats.totalHits / this.stats.totalRequests) * 100 
-      : 0;
+    this.stats.totalSize = Array.from(this.cache.values()).reduce(
+      (total, entry) => total + entry.size,
+      0
+    );
+
+    this.stats.hitRate =
+      this.stats.totalRequests > 0
+        ? (this.stats.totalHits / this.stats.totalRequests) * 100
+        : 0;
 
     const entries = Array.from(this.cache.values());
     if (entries.length > 0) {
-      const timestamps = entries.map(e => e.timestamp);
-      this.stats.oldestEntry = new Date(Math.min(...timestamps.map(t => t.getTime())));
-      this.stats.newestEntry = new Date(Math.max(...timestamps.map(t => t.getTime())));
+      const timestamps = entries.map((e) => e.timestamp);
+      this.stats.oldestEntry = new Date(
+        Math.min(...timestamps.map((t) => t.getTime()))
+      );
+      this.stats.newestEntry = new Date(
+        Math.max(...timestamps.map((t) => t.getTime()))
+      );
     } else {
       this.stats.oldestEntry = null;
       this.stats.newestEntry = null;
@@ -330,7 +348,7 @@ class IntelligentCacheService {
   // Remove expired entries
   private cleanupExpired(): void {
     let cleanedCount = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (this.isExpired(entry)) {
         this.cache.delete(key);
@@ -345,14 +363,16 @@ class IntelligentCacheService {
   }
 
   // Warm up cache with predefined data
-  async warmUp(warmupData: Array<{
-    key: string;
-    fetcher: () => Promise<unknown>;
-    ttl?: number;
-    tags?: string[];
-  }>): Promise<void> {
+  async warmUp(
+    warmupData: Array<{
+      key: string;
+      fetcher: () => Promise<unknown>;
+      ttl?: number;
+      tags?: string[];
+    }>
+  ): Promise<void> {
     console.log(`🔥 Warming up cache with ${warmupData.length} entries`);
-    
+
     const promises = warmupData.map(async ({ key, fetcher, ttl, tags }) => {
       try {
         await this.get(key, fetcher, { ttl, tags });
@@ -362,7 +382,7 @@ class IntelligentCacheService {
     });
 
     await Promise.all(promises);
-    console.log('🔥 Cache warmup completed');
+    console.log("🔥 Cache warmup completed");
   }
 }
 
@@ -372,7 +392,7 @@ export const intelligentCache = new IntelligentCacheService({
   maxEntries: 2000,
   defaultTtl: 5 * 60 * 1000, // 5 minutes for stock data
   enableCompression: true,
-  enableMetrics: true
+  enableMetrics: true,
 });
 
 // Stock-specific cache with shorter TTL
@@ -381,7 +401,7 @@ export const stockCache = new IntelligentCacheService({
   maxEntries: 1000,
   defaultTtl: 2 * 60 * 1000, // 2 minutes for real-time data
   enableCompression: true,
-  enableMetrics: true
+  enableMetrics: true,
 });
 
 // Market data cache with longer TTL
@@ -390,27 +410,27 @@ export const marketCache = new IntelligentCacheService({
   maxEntries: 500,
   defaultTtl: 10 * 60 * 1000, // 10 minutes for market overview
   enableCompression: true,
-  enableMetrics: true
+  enableMetrics: true,
 });
 
 // Cache utility functions
 export const cacheUtils = {
   // Generate cache key for stock data
-  stockKey: (symbol: string, source?: string) => 
-    `stock:${symbol.toUpperCase()}${source ? `:${source}` : ''}`,
+  stockKey: (symbol: string, source?: string) =>
+    `stock:${symbol.toUpperCase()}${source ? `:${source}` : ""}`,
 
   // Generate cache key for market data
   marketKey: (type: string, region?: string) =>
-    `market:${type}${region ? `:${region}` : ''}`,
+    `market:${type}${region ? `:${region}` : ""}`,
 
   // Generate cache key for crypto data
-  cryptoKey: (symbol: string, currency = 'USD') =>
+  cryptoKey: (symbol: string, currency = "USD") =>
     `crypto:${symbol.toUpperCase()}:${currency.toUpperCase()}`,
 
   // Get cache tags for financial data
-  getTags: (type: 'stock' | 'crypto' | 'market', symbol?: string) => {
+  getTags: (type: "stock" | "crypto" | "market", symbol?: string) => {
     const tags: string[] = [type];
     if (symbol) tags.push(`symbol:${symbol.toUpperCase()}`);
     return tags;
-  }
+  },
 };

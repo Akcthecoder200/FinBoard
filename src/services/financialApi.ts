@@ -2,8 +2,13 @@
 // Primary: Alpha Vantage API | Fallback: Yahoo Finance API
 // Features: Data Mapping, Intelligent Caching, Request Deduplication
 
-import { dataMappingService, type ApiResponseSchema, type MappingTemplate, type TransformationRule } from './dataMapping';
-import { stockCache, marketCache, cacheUtils } from './intelligentCache';
+import {
+  dataMappingService,
+  type ApiResponseSchema,
+  type MappingTemplate,
+  type TransformationRule,
+} from "./dataMapping";
+import { stockCache, marketCache, cacheUtils } from "./intelligentCache";
 
 export interface StockData {
   symbol: string;
@@ -63,7 +68,10 @@ class FinancialApiService {
     symbol: string
   ): Promise<ApiResponse<StockData>> {
     // Check if Alpha Vantage is temporarily blocked
-    if (this.alphaVantageBlocked && Date.now() < this.alphaVantageBlockedUntil) {
+    if (
+      this.alphaVantageBlocked &&
+      Date.now() < this.alphaVantageBlockedUntil
+    ) {
       throw new Error("Alpha Vantage temporarily blocked due to rate limits");
     }
 
@@ -79,7 +87,9 @@ class FinancialApiService {
       console.warn("Alpha Vantage rate limit reached, blocking for 60 seconds");
       this.alphaVantageBlocked = true;
       this.alphaVantageBlockedUntil = Date.now() + 60000;
-      throw new Error("Alpha Vantage rate limit exceeded, switching to Yahoo Finance");
+      throw new Error(
+        "Alpha Vantage rate limit exceeded, switching to Yahoo Finance"
+      );
     }
 
     try {
@@ -87,7 +97,7 @@ class FinancialApiService {
 
       const url = `/api/stock-alpha-vantage/${symbol}`;
       const startTime = Date.now();
-      
+
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -100,13 +110,13 @@ class FinancialApiService {
       // Analyze API response for data mapping
       const responseText = JSON.stringify(data);
       dataMappingService.analyzeApiResponse(
-        'alpha-vantage',
+        "alpha-vantage",
         `/stock/${symbol}`,
         data,
         {
           responseSize: responseText.length,
           responseTime,
-          statusCode: response.status
+          statusCode: response.status,
         }
       );
 
@@ -119,11 +129,17 @@ class FinancialApiService {
       }
 
       if (!response.ok) {
-        throw new Error(`Alpha Vantage API responded with ${response.status}: ${data.error || 'Unknown error'}`);
+        throw new Error(
+          `Alpha Vantage API responded with ${response.status}: ${
+            data.error || "Unknown error"
+          }`
+        );
       }
 
       if (!data.success || !data.data) {
-        throw new Error(data.error || "Alpha Vantage API returned unsuccessful response");
+        throw new Error(
+          data.error || "Alpha Vantage API returned unsuccessful response"
+        );
       }
 
       return {
@@ -133,13 +149,16 @@ class FinancialApiService {
       };
     } catch (error) {
       // If it's a rate limit error, don't count it against the rate limit
-      if (error instanceof Error && error.message.includes('rate limit')) {
+      if (error instanceof Error && error.message.includes("rate limit")) {
         this.alphaVantageRequestCount--; // Don't penalize for rate limit hits
       }
-      
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch Alpha Vantage data",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch Alpha Vantage data",
         timestamp: new Date(),
       };
     }
@@ -152,7 +171,7 @@ class FinancialApiService {
     try {
       const url = `/api/stock/${symbol}`;
       const startTime = Date.now();
-      
+
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -170,13 +189,13 @@ class FinancialApiService {
       // Analyze API response for data mapping
       const responseText = JSON.stringify(data);
       dataMappingService.analyzeApiResponse(
-        'yahoo-finance',
+        "yahoo-finance",
         `/stock/${symbol}`,
         data,
         {
           responseSize: responseText.length,
           responseTime,
-          statusCode: response.status
+          statusCode: response.status,
         }
       );
 
@@ -272,28 +291,37 @@ class FinancialApiService {
   // Main method: Try Alpha Vantage first, fallback to Yahoo Finance, then mock data (with intelligent caching)
   async getStockQuote(symbol: string): Promise<StockData> {
     const cacheKey = cacheUtils.stockKey(symbol);
-    const tags = cacheUtils.getTags('stock', symbol);
+    const tags = cacheUtils.getTags("stock", symbol);
 
     return stockCache.get(
       cacheKey,
       async () => {
         try {
           // Skip Alpha Vantage if it's blocked due to rate limits
-          if (!this.alphaVantageBlocked || Date.now() > this.alphaVantageBlockedUntil) {
+          if (
+            !this.alphaVantageBlocked ||
+            Date.now() > this.alphaVantageBlockedUntil
+          ) {
             // Try Alpha Vantage first
             console.log(`Attempting to fetch ${symbol} from Alpha Vantage...`);
             const alphaVantageResponse = await this.fetchAlphaVantage(symbol);
 
             if (alphaVantageResponse.success && alphaVantageResponse.data) {
-              console.log(`✅ Successfully fetched ${symbol} from Alpha Vantage`);
+              console.log(
+                `✅ Successfully fetched ${symbol} from Alpha Vantage`
+              );
               return alphaVantageResponse.data;
             }
           } else {
-            console.log(`⚠️ Alpha Vantage blocked due to rate limits, skipping to Yahoo Finance...`);
+            console.log(
+              `⚠️ Alpha Vantage blocked due to rate limits, skipping to Yahoo Finance...`
+            );
           }
 
           // Fallback to Yahoo Finance
-          console.log(`⚠️ Alpha Vantage failed for ${symbol}, trying Yahoo Finance...`);
+          console.log(
+            `⚠️ Alpha Vantage failed for ${symbol}, trying Yahoo Finance...`
+          );
           const yahooResponse = await this.fetchYahooFinance(symbol);
 
           if (yahooResponse.success && yahooResponse.data) {
@@ -305,13 +333,16 @@ class FinancialApiService {
           console.warn(`⚠️ Both APIs failed for ${symbol}, using mock data`);
           return this.generateMockStockData(symbol);
         } catch (error) {
-          console.warn(`❌ All APIs failed for ${symbol}, using mock data:`, error);
+          console.warn(
+            `❌ All APIs failed for ${symbol}, using mock data:`,
+            error
+          );
           return this.generateMockStockData(symbol);
         }
       },
       {
         ttl: 2 * 60 * 1000, // 2 minutes for real-time stock data
-        tags
+        tags,
       }
     );
   }
@@ -319,7 +350,7 @@ class FinancialApiService {
   // Crypto quote method with caching
   async getCryptoQuote(symbol: string): Promise<CryptoData> {
     const cacheKey = cacheUtils.cryptoKey(symbol);
-    const tags = cacheUtils.getTags('crypto', symbol);
+    const tags = cacheUtils.getTags("crypto", symbol);
 
     return stockCache.get(
       cacheKey,
@@ -338,15 +369,15 @@ class FinancialApiService {
       },
       {
         ttl: 5 * 60 * 1000, // 5 minutes for crypto data
-        tags
+        tags,
       }
     );
   }
 
   // Market overview method with caching
   async getMarketOverview(): Promise<MarketData> {
-    const cacheKey = cacheUtils.marketKey('overview');
-    const tags = cacheUtils.getTags('market');
+    const cacheKey = cacheUtils.marketKey("overview");
+    const tags = cacheUtils.getTags("market");
 
     return marketCache.get(
       cacheKey,
@@ -356,13 +387,16 @@ class FinancialApiService {
           console.log("Generating mock market overview data");
           return this.generateMockMarketData();
         } catch (error) {
-          console.warn("❌ Failed to fetch market data, using mock data:", error);
+          console.warn(
+            "❌ Failed to fetch market data, using mock data:",
+            error
+          );
           return this.generateMockMarketData();
         }
       },
       {
         ttl: 10 * 60 * 1000, // 10 minutes for market overview
-        tags
+        tags,
       }
     );
   }
@@ -401,7 +435,7 @@ class FinancialApiService {
   getCacheStats() {
     return {
       stock: stockCache.getStats(),
-      market: marketCache.getStats()
+      market: marketCache.getStats(),
     };
   }
 
@@ -409,17 +443,17 @@ class FinancialApiService {
   clearAllCaches(): void {
     stockCache.clear();
     marketCache.clear();
-    console.log('🗑️ All financial data caches cleared');
+    console.log("🗑️ All financial data caches cleared");
   }
 
   // Invalidate cache by symbol
   invalidateSymbol(symbol: string): void {
     const stockKey = cacheUtils.stockKey(symbol);
     const cryptoKey = cacheUtils.cryptoKey(symbol);
-    
+
     stockCache.delete(stockKey);
     stockCache.delete(cryptoKey);
-    
+
     console.log(`🗑️ Cache invalidated for symbol: ${symbol}`);
   }
 
@@ -427,8 +461,8 @@ class FinancialApiService {
   invalidateByTags(tags: string[]): void {
     stockCache.invalidateByTags(tags);
     marketCache.invalidateByTags(tags);
-    
-    console.log(`🗑️ Cache invalidated by tags: ${tags.join(', ')}`);
+
+    console.log(`🗑️ Cache invalidated by tags: ${tags.join(", ")}`);
   }
 
   // Get API response schemas for debugging
@@ -453,18 +487,27 @@ class FinancialApiService {
       description?: string;
     }>
   ): MappingTemplate {
-    return dataMappingService.createMappingTemplate(name, description, apiSource, mappings);
+    return dataMappingService.createMappingTemplate(
+      name,
+      description,
+      apiSource,
+      mappings
+    );
   }
 
   // Pre-warm cache with popular symbols
-  async preWarmCache(symbols: string[] = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN']): Promise<void> {
-    console.log(`🔥 Pre-warming cache with popular symbols: ${symbols.join(', ')}`);
-    
-    const warmupData = symbols.map(symbol => ({
+  async preWarmCache(
+    symbols: string[] = ["AAPL", "GOOGL", "MSFT", "TSLA", "AMZN"]
+  ): Promise<void> {
+    console.log(
+      `🔥 Pre-warming cache with popular symbols: ${symbols.join(", ")}`
+    );
+
+    const warmupData = symbols.map((symbol) => ({
       key: cacheUtils.stockKey(symbol),
       fetcher: () => this.getStockQuote(symbol),
       ttl: 5 * 60 * 1000, // 5 minutes
-      tags: cacheUtils.getTags('stock', symbol)
+      tags: cacheUtils.getTags("stock", symbol),
     }));
 
     await stockCache.warmUp(warmupData);

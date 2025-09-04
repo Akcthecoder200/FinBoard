@@ -1,10 +1,18 @@
 // Enhanced Financial Data Hook
 // Integrates caching, data mapping, and error handling
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { financialApi, type StockData, type CryptoData, type MarketData } from '../services/financialApi';
-import { stockCache, marketCache } from '../services/intelligentCache';
-import { dataMappingService, type TransformationRule } from '../services/dataMapping';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  financialApi,
+  type StockData,
+  type CryptoData,
+  type MarketData,
+} from "../services/financialApi";
+import { stockCache, marketCache } from "../services/intelligentCache";
+import {
+  dataMappingService,
+  type TransformationRule,
+} from "../services/dataMapping";
 
 export interface UseFinancialDataOptions {
   symbol?: string;
@@ -24,12 +32,15 @@ export interface FinancialDataState<T> {
 }
 
 // Hook for stock data
-export function useStockData(symbol: string, options: UseFinancialDataOptions = {}) {
+export function useStockData(
+  symbol: string,
+  options: UseFinancialDataOptions = {}
+) {
   const {
     autoRefresh = false,
     refreshInterval = 2 * 60 * 1000, // 2 minutes
     enableCache = true,
-    forceRefresh = false
+    forceRefresh = false,
   } = options;
 
   const [state, setState] = useState<FinancialDataState<StockData>>({
@@ -38,51 +49,57 @@ export function useStockData(symbol: string, options: UseFinancialDataOptions = 
     error: null,
     lastUpdated: null,
     cached: false,
-    retryCount: 0
+    retryCount: 0,
   });
 
-  const fetchStockData = useCallback(async (force = false) => {
-    if (!symbol) return;
+  const fetchStockData = useCallback(
+    async (force = false) => {
+      if (!symbol) return;
 
-    setState(prev => ({ ...prev, loading: true, error: null }));
+      setState((prev) => ({ ...prev, loading: true, error: null }));
 
-    try {
-      let data: StockData;
-      let cached = false;
+      try {
+        let data: StockData;
+        let cached = false;
 
-      if (enableCache && !force && !forceRefresh) {
-        // Try to get from cache first
-        const cachedData = stockCache.getOnly<StockData>(`stock:${symbol.toUpperCase()}`);
-        if (cachedData) {
-          data = cachedData;
-          cached = true;
+        if (enableCache && !force && !forceRefresh) {
+          // Try to get from cache first
+          const cachedData = stockCache.getOnly<StockData>(
+            `stock:${symbol.toUpperCase()}`
+          );
+          if (cachedData) {
+            data = cachedData;
+            cached = true;
+          } else {
+            data = await financialApi.getStockQuote(symbol);
+          }
         } else {
           data = await financialApi.getStockQuote(symbol);
         }
-      } else {
-        data = await financialApi.getStockQuote(symbol);
-      }
 
-      setState(prev => ({
-        ...prev,
-        data,
-        loading: false,
-        error: null,
-        lastUpdated: new Date(),
-        cached,
-        retryCount: 0
-      }));
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch stock data';
-      
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: errorMessage,
-        retryCount: prev.retryCount + 1
-      }));
-    }
-  }, [symbol, enableCache, forceRefresh]);
+        setState((prev) => ({
+          ...prev,
+          data,
+          loading: false,
+          error: null,
+          lastUpdated: new Date(),
+          cached,
+          retryCount: 0,
+        }));
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to fetch stock data";
+
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: errorMessage,
+          retryCount: prev.retryCount + 1,
+        }));
+      }
+    },
+    [symbol, enableCache, forceRefresh]
+  );
 
   const retry = useCallback(() => {
     fetchStockData(true);
@@ -115,7 +132,7 @@ export function useStockData(symbol: string, options: UseFinancialDataOptions = 
     ...state,
     refetch: fetchStockData,
     retry,
-    invalidateCache
+    invalidateCache,
   };
 }
 
@@ -132,38 +149,41 @@ export function useMultipleStocks(symbols: string[]) {
     loading: false,
     error: null,
     lastUpdated: null,
-    progress: 0
+    progress: 0,
   });
 
   const fetchMultipleStocks = useCallback(async () => {
     if (symbols.length === 0) return;
 
-    setState(prev => ({ ...prev, loading: true, error: null, progress: 0 }));
+    setState((prev) => ({ ...prev, loading: true, error: null, progress: 0 }));
 
     try {
       const stocksData = await financialApi.getMultipleStocks(symbols);
-      
+
       const dataMap = stocksData.reduce((acc, stock) => {
         acc[stock.symbol] = stock;
         return acc;
       }, {} as Record<string, StockData>);
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         data: dataMap,
         loading: false,
         error: null,
         lastUpdated: new Date(),
-        progress: 100
+        progress: 100,
       }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch multiple stocks';
-      
-      setState(prev => ({
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch multiple stocks";
+
+      setState((prev) => ({
         ...prev,
         loading: false,
         error: errorMessage,
-        progress: 0
+        progress: 0,
       }));
     }
   }, [symbols]);
@@ -174,7 +194,7 @@ export function useMultipleStocks(symbols: string[]) {
 
   return {
     ...state,
-    refetch: fetchMultipleStocks
+    refetch: fetchMultipleStocks,
   };
 }
 
@@ -186,34 +206,35 @@ export function useCryptoData(symbol: string) {
     error: null,
     lastUpdated: null,
     cached: false,
-    retryCount: 0
+    retryCount: 0,
   });
 
   const fetchCryptoData = useCallback(async () => {
     if (!symbol) return;
 
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       const data = await financialApi.getCryptoQuote(symbol);
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         data,
         loading: false,
         error: null,
         lastUpdated: new Date(),
         cached: false, // Crypto is currently mock data
-        retryCount: 0
+        retryCount: 0,
       }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch crypto data';
-      
-      setState(prev => ({
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch crypto data";
+
+      setState((prev) => ({
         ...prev,
         loading: false,
         error: errorMessage,
-        retryCount: prev.retryCount + 1
+        retryCount: prev.retryCount + 1,
       }));
     }
   }, [symbol]);
@@ -224,7 +245,7 @@ export function useCryptoData(symbol: string) {
 
   return {
     ...state,
-    refetch: fetchCryptoData
+    refetch: fetchCryptoData,
   };
 }
 
@@ -233,7 +254,7 @@ export function useMarketData(options: UseFinancialDataOptions = {}) {
   const {
     autoRefresh = false,
     refreshInterval = 10 * 60 * 1000, // 10 minutes
-    enableCache = true
+    enableCache = true,
   } = options;
 
   const [state, setState] = useState<FinancialDataState<MarketData>>({
@@ -242,18 +263,18 @@ export function useMarketData(options: UseFinancialDataOptions = {}) {
     error: null,
     lastUpdated: null,
     cached: false,
-    retryCount: 0
+    retryCount: 0,
   });
 
   const fetchMarketData = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
       let data: MarketData;
       let cached = false;
 
       if (enableCache) {
-        const cachedData = marketCache.getOnly<MarketData>('market:overview');
+        const cachedData = marketCache.getOnly<MarketData>("market:overview");
         if (cachedData) {
           data = cachedData;
           cached = true;
@@ -264,23 +285,24 @@ export function useMarketData(options: UseFinancialDataOptions = {}) {
         data = await financialApi.getMarketOverview();
       }
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         data,
         loading: false,
         error: null,
         lastUpdated: new Date(),
         cached,
-        retryCount: 0
+        retryCount: 0,
       }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch market data';
-      
-      setState(prev => ({
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch market data";
+
+      setState((prev) => ({
         ...prev,
         loading: false,
         error: errorMessage,
-        retryCount: prev.retryCount + 1
+        retryCount: prev.retryCount + 1,
       }));
     }
   }, [enableCache]);
@@ -302,13 +324,15 @@ export function useMarketData(options: UseFinancialDataOptions = {}) {
 
   return {
     ...state,
-    refetch: fetchMarketData
+    refetch: fetchMarketData,
   };
 }
 
 // Hook for cache management
 export function useCacheManagement() {
-  const [cacheStats, setCacheStats] = useState(() => financialApi.getCacheStats());
+  const [cacheStats, setCacheStats] = useState(() =>
+    financialApi.getCacheStats()
+  );
 
   const refreshStats = useCallback(() => {
     setCacheStats(financialApi.getCacheStats());
@@ -319,15 +343,21 @@ export function useCacheManagement() {
     refreshStats();
   }, [refreshStats]);
 
-  const invalidateSymbol = useCallback((symbol: string) => {
-    financialApi.invalidateSymbol(symbol);
-    refreshStats();
-  }, [refreshStats]);
+  const invalidateSymbol = useCallback(
+    (symbol: string) => {
+      financialApi.invalidateSymbol(symbol);
+      refreshStats();
+    },
+    [refreshStats]
+  );
 
-  const invalidateByTags = useCallback((tags: string[]) => {
-    financialApi.invalidateByTags(tags);
-    refreshStats();
-  }, [refreshStats]);
+  const invalidateByTags = useCallback(
+    (tags: string[]) => {
+      financialApi.invalidateByTags(tags);
+      refreshStats();
+    },
+    [refreshStats]
+  );
 
   // Auto-refresh stats every 30 seconds
   useEffect(() => {
@@ -340,14 +370,16 @@ export function useCacheManagement() {
     refreshStats,
     clearAllCaches,
     invalidateSymbol,
-    invalidateByTags
+    invalidateByTags,
   };
 }
 
 // Hook for data mapping management
 export function useDataMapping() {
   const [schemas, setSchemas] = useState(() => dataMappingService.getSchemas());
-  const [templates, setTemplates] = useState(() => dataMappingService.getTemplates());
+  const [templates, setTemplates] = useState(() =>
+    dataMappingService.getTemplates()
+  );
 
   const refreshSchemas = useCallback(() => {
     setSchemas(dataMappingService.getSchemas());
@@ -357,28 +389,36 @@ export function useDataMapping() {
     setTemplates(dataMappingService.getTemplates());
   }, []);
 
-  const createTemplate = useCallback((
-    name: string,
-    description: string,
-    apiSource: string,
-    mappings: Array<{
-      sourceField: string;
-      targetField: string;
-      transformation?: TransformationRule;
-      description?: string;
-    }>
-  ) => {
-    const template = financialApi.createMappingTemplate(name, description, apiSource, mappings);
-    refreshTemplates();
-    return template;
-  }, [refreshTemplates]);
+  const createTemplate = useCallback(
+    (
+      name: string,
+      description: string,
+      apiSource: string,
+      mappings: Array<{
+        sourceField: string;
+        targetField: string;
+        transformation?: TransformationRule;
+        description?: string;
+      }>
+    ) => {
+      const template = financialApi.createMappingTemplate(
+        name,
+        description,
+        apiSource,
+        mappings
+      );
+      refreshTemplates();
+      return template;
+    },
+    [refreshTemplates]
+  );
 
   return {
     schemas,
     templates,
     refreshSchemas,
     refreshTemplates,
-    createTemplate
+    createTemplate,
   };
 }
 
@@ -395,7 +435,7 @@ export function usePreWarmCache() {
       await financialApi.preWarmCache(symbols);
       setWarmupProgress(100);
     } catch (error) {
-      console.error('Failed to pre-warm cache:', error);
+      console.error("Failed to pre-warm cache:", error);
     } finally {
       setIsWarming(false);
     }
@@ -404,46 +444,49 @@ export function usePreWarmCache() {
   return {
     isWarming,
     warmupProgress,
-    preWarmCache
+    preWarmCache,
   };
 }
 
 // Utility functions for formatting and calculations
 export const useFinancialUtils = () => {
-  return useMemo(() => ({
-    formatCurrency: (value: number, currency = 'USD') =>
-      new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(value),
+  return useMemo(
+    () => ({
+      formatCurrency: (value: number, currency = "USD") =>
+        new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(value),
 
-    formatPercentage: (value: number) => {
-      const sign = value >= 0 ? '+' : '';
-      return `${sign}${value.toFixed(2)}%`;
-    },
+      formatPercentage: (value: number) => {
+        const sign = value >= 0 ? "+" : "";
+        return `${sign}${value.toFixed(2)}%`;
+      },
 
-    formatLargeNumber: (value: number) => {
-      if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
-      if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-      if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-      if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
-      return `$${value.toFixed(0)}`;
-    },
+      formatLargeNumber: (value: number) => {
+        if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
+        if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
+        if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+        if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
+        return `$${value.toFixed(0)}`;
+      },
 
-    calculateChange: (current: number, previous: number) => ({
-      absolute: current - previous,
-      percentage: ((current - previous) / previous) * 100
+      calculateChange: (current: number, previous: number) => ({
+        absolute: current - previous,
+        percentage: ((current - previous) / previous) * 100,
+      }),
+
+      isMarketOpen: () => {
+        const now = new Date();
+        const day = now.getDay();
+        const hour = now.getHours();
+
+        // Monday to Friday (1-5), 9:30 AM to 4:00 PM EST
+        return day >= 1 && day <= 5 && hour >= 9 && hour < 16;
+      },
     }),
-
-    isMarketOpen: () => {
-      const now = new Date();
-      const day = now.getDay();
-      const hour = now.getHours();
-      
-      // Monday to Friday (1-5), 9:30 AM to 4:00 PM EST
-      return day >= 1 && day <= 5 && hour >= 9 && hour < 16;
-    }
-  }), []);
+    []
+  );
 };
