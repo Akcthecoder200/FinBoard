@@ -67,7 +67,7 @@ Create a `.env.local` file in the root directory:
 
 ```bash
 # Alpha Vantage API Configuration
-NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=VMFAF630EBQ1HFBK
+NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=your_api_key
 ```
 
 > **Note:** Replace with your actual API key from [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
@@ -459,3 +459,4 @@ _FinBoard - Your Professional Financial Dashboard Solution_
 ⭐ **Star this repository if you find it helpful!** ⭐
 
 </div>
+
