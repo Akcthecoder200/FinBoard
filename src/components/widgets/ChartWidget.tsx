@@ -180,7 +180,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
 
   const renderChart = () => {
     // Use the advanced CandlestickChart for candlestick type
-    if (chartType === 'candlestick') {
+    if (chartType === "candlestick") {
       return (
         <CandlestickChart
           symbol={symbol}
@@ -193,7 +193,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
         />
       );
     }
-    
+
     switch (chartType) {
       case "area":
         return (

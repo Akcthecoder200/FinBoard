@@ -1,19 +1,19 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import React, { useState, useRef, useCallback, useMemo } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   ReferenceLine,
-  ReferenceArea
-} from 'recharts';
+  ReferenceArea,
+} from "recharts";
 
 interface ChartAnnotation {
   id: string;
-  type: 'line' | 'area' | 'point' | 'text';
+  type: "line" | "area" | "point" | "text";
   x?: number | string;
   y?: number;
   x1?: number | string;
@@ -65,7 +65,7 @@ interface AnnotatedChartProps {
 const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
   data,
   dataKey,
-  xKey = 'date',
+  xKey = "date",
   height = 400,
   onAnnotationAdd,
   onAnnotationUpdate,
@@ -73,26 +73,34 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
   annotations = [],
   enableDrawing = true,
   showGrid = true,
-  showTooltip = true
+  showTooltip = true,
 }) => {
-  const [drawingMode, setDrawingMode] = useState<'line' | 'area' | 'point' | 'text'>('line');
-  const [selectedAnnotation, setSelectedAnnotation] = useState<string | null>(null);
+  const [drawingMode, setDrawingMode] = useState<
+    "line" | "area" | "point" | "text"
+  >("line");
+  const [selectedAnnotation, setSelectedAnnotation] = useState<string | null>(
+    null
+  );
   const [isMouseOver, setIsMouseOver] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Annotation colors - memoized to prevent useCallback dependency issues
-  const ANNOTATION_COLORS = useMemo(() => [
-    '#3b82f6', // blue
-    '#10b981', // green
-    '#f59e0b', // yellow
-    '#ef4444', // red
-    '#8b5cf6', // purple
-    '#06b6d4', // cyan
-    '#84cc16'  // lime
-  ], []);
+  const ANNOTATION_COLORS = useMemo(
+    () => [
+      "#3b82f6", // blue
+      "#10b981", // green
+      "#f59e0b", // yellow
+      "#ef4444", // red
+      "#8b5cf6", // purple
+      "#06b6d4", // cyan
+      "#84cc16", // lime
+    ],
+    []
+  );
 
   // Generate unique ID for annotations
-  const generateId = () => `annotation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const generateId = () =>
+    `annotation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const handleMouseEnter = () => setIsMouseOver(true);
   const handleMouseLeave = () => {
@@ -100,36 +108,50 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
   };
 
   // Handle chart click - simplified typing
-  const handleChartClick = useCallback((e: Record<string, unknown>) => {
-    if (!enableDrawing || !e || !e.activeLabel) return;
+  const handleChartClick = useCallback(
+    (e: Record<string, unknown>) => {
+      if (!enableDrawing || !e || !e.activeLabel) return;
 
-    const activePayload = e.activePayload as Array<{ value: number }> | undefined;
-    
-    const newAnnotation: ChartAnnotation = {
-      id: generateId(),
-      type: drawingMode,
-      color: ANNOTATION_COLORS[annotations.length % ANNOTATION_COLORS.length],
-      timestamp: Date.now(),
-      label: `${drawingMode.charAt(0).toUpperCase() + drawingMode.slice(1)} Annotation`,
-      description: `Added at ${new Date().toLocaleTimeString()}`
-    };
+      const activePayload = e.activePayload as
+        | Array<{ value: number }>
+        | undefined;
 
-    if (drawingMode === 'line') {
-      // Horizontal line at clicked Y value
-      newAnnotation.y = activePayload?.[0]?.value || 0;
-    } else if (drawingMode === 'point') {
-      // Point at exact click location
-      newAnnotation.x = e.activeLabel as string;
-      newAnnotation.y = activePayload?.[0]?.value || 0;
-    } else if (drawingMode === 'text') {
-      // Text annotation
-      newAnnotation.x = e.activeLabel as string;
-      newAnnotation.y = activePayload?.[0]?.value || 0;
-      newAnnotation.label = prompt('Enter annotation text:') || 'Text Annotation';
-    }
+      const newAnnotation: ChartAnnotation = {
+        id: generateId(),
+        type: drawingMode,
+        color: ANNOTATION_COLORS[annotations.length % ANNOTATION_COLORS.length],
+        timestamp: Date.now(),
+        label: `${
+          drawingMode.charAt(0).toUpperCase() + drawingMode.slice(1)
+        } Annotation`,
+        description: `Added at ${new Date().toLocaleTimeString()}`,
+      };
 
-    onAnnotationAdd?.(newAnnotation);
-  }, [drawingMode, enableDrawing, annotations.length, onAnnotationAdd, ANNOTATION_COLORS]);
+      if (drawingMode === "line") {
+        // Horizontal line at clicked Y value
+        newAnnotation.y = activePayload?.[0]?.value || 0;
+      } else if (drawingMode === "point") {
+        // Point at exact click location
+        newAnnotation.x = e.activeLabel as string;
+        newAnnotation.y = activePayload?.[0]?.value || 0;
+      } else if (drawingMode === "text") {
+        // Text annotation
+        newAnnotation.x = e.activeLabel as string;
+        newAnnotation.y = activePayload?.[0]?.value || 0;
+        newAnnotation.label =
+          prompt("Enter annotation text:") || "Text Annotation";
+      }
+
+      onAnnotationAdd?.(newAnnotation);
+    },
+    [
+      drawingMode,
+      enableDrawing,
+      annotations.length,
+      onAnnotationAdd,
+      ANNOTATION_COLORS,
+    ]
+  );
 
   // Delete annotation
   const deleteAnnotation = (annotationId: string) => {
@@ -138,7 +160,10 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
   };
 
   // Update annotation
-  const updateAnnotation = (annotation: ChartAnnotation, updates: Partial<ChartAnnotation>) => {
+  const updateAnnotation = (
+    annotation: ChartAnnotation,
+    updates: Partial<ChartAnnotation>
+  ) => {
     const updatedAnnotation = { ...annotation, ...updates };
     onAnnotationUpdate?.(updatedAnnotation);
   };
@@ -147,10 +172,9 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
   const CustomDot = (props: CustomDotProps) => {
     const { cx, cy, payload } = props;
     if (!payload) return null;
-    
-    const pointAnnotations = annotations.filter(ann => 
-      ann.type === 'point' && 
-      ann.x === payload[xKey]
+
+    const pointAnnotations = annotations.filter(
+      (ann) => ann.type === "point" && ann.x === payload[xKey]
     );
 
     if (pointAnnotations.length === 0) return null;
@@ -166,7 +190,7 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
               fill={annotation.color}
               stroke="#fff"
               strokeWidth={2}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: "pointer" }}
               onClick={() => setSelectedAnnotation(annotation.id)}
             />
             {annotation.label && (
@@ -191,9 +215,10 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
   const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (!active || !payload || !payload.length || !showTooltip) return null;
 
-    const relevantAnnotations = annotations.filter(ann => 
-      (ann.type === 'point' && ann.x === label) ||
-      (ann.type === 'text' && ann.x === label)
+    const relevantAnnotations = annotations.filter(
+      (ann) =>
+        (ann.type === "point" && ann.x === label) ||
+        (ann.type === "text" && ann.x === label)
     );
 
     return (
@@ -207,10 +232,16 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
         {relevantAnnotations.length > 0 && (
           <div className="mt-2 pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground mb-1">Annotations:</p>
-            {relevantAnnotations.map(ann => (
-              <div key={ann.id} className="text-xs" style={{ color: ann.color }}>
+            {relevantAnnotations.map((ann) => (
+              <div
+                key={ann.id}
+                className="text-xs"
+                style={{ color: ann.color }}
+              >
                 <strong>{ann.label}</strong>
-                {ann.description && <p className="text-muted-foreground">{ann.description}</p>}
+                {ann.description && (
+                  <p className="text-muted-foreground">{ann.description}</p>
+                )}
               </div>
             ))}
           </div>
@@ -225,32 +256,32 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
       {enableDrawing && (
         <div className="flex items-center gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
           <span className="text-sm font-medium">Drawing Mode:</span>
-          {(['line', 'point', 'text'] as const).map((mode) => (
+          {(["line", "point", "text"] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setDrawingMode(mode)}
               className={`px-3 py-1 text-xs rounded-md transition-colors ${
                 drawingMode === mode
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-background text-foreground hover:bg-muted'
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-foreground hover:bg-muted"
               }`}
             >
               {mode.charAt(0).toUpperCase() + mode.slice(1)}
             </button>
           ))}
-          
+
           <div className="h-4 w-px bg-border mx-2" />
-          
+
           <span className="text-sm text-muted-foreground">
             Click on chart to add {drawingMode} annotation
           </span>
-          
+
           {annotations.length > 0 && (
             <>
               <div className="h-4 w-px bg-border mx-2" />
               <button
                 onClick={() => {
-                  annotations.forEach(ann => deleteAnnotation(ann.id));
+                  annotations.forEach((ann) => deleteAnnotation(ann.id));
                 }}
                 className="px-3 py-1 text-xs rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
@@ -262,44 +293,47 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
       )}
 
       {/* Chart Container */}
-      <div 
+      <div
         ref={chartRef}
         style={{ height }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart 
-            data={data} 
+          <LineChart
+            data={data}
             onClick={handleChartClick}
-            style={{ cursor: enableDrawing ? 'crosshair' : 'default' }}
+            style={{ cursor: enableDrawing ? "crosshair" : "default" }}
           >
-            {showGrid && <CartesianGrid strokeDasharray="3 3" className="opacity-30" />}
-            <XAxis 
-              dataKey={xKey} 
-              className="text-xs"
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis 
+            {showGrid && (
+              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+            )}
+            <XAxis dataKey={xKey} className="text-xs" tick={{ fontSize: 12 }} />
+            <YAxis
               className="text-xs"
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => value.toFixed(2)}
             />
             <Tooltip content={<CustomTooltip />} />
-            
+
             {/* Main Line */}
-            <Line 
-              type="monotone" 
-              dataKey={dataKey} 
-              stroke="#3b82f6" 
+            <Line
+              type="monotone"
+              dataKey={dataKey}
+              stroke="#3b82f6"
               strokeWidth={2}
               dot={<CustomDot />}
-              activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2, fill: '#fff' }}
+              activeDot={{
+                r: 6,
+                stroke: "#3b82f6",
+                strokeWidth: 2,
+                fill: "#fff",
+              }}
             />
 
             {/* Render Annotations */}
             {annotations.map((annotation) => {
-              if (annotation.type === 'line' && annotation.y !== undefined) {
+              if (annotation.type === "line" && annotation.y !== undefined) {
                 return (
                   <ReferenceLine
                     key={annotation.id}
@@ -308,15 +342,19 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     label={{
-                      value: annotation.label || '',
-                      position: 'insideTopLeft',
-                      style: { fill: annotation.color, fontSize: 12 }
+                      value: annotation.label || "",
+                      position: "insideTopLeft",
+                      style: { fill: annotation.color, fontSize: 12 },
                     }}
                   />
                 );
               }
-              
-              if (annotation.type === 'area' && annotation.y1 !== undefined && annotation.y2 !== undefined) {
+
+              if (
+                annotation.type === "area" &&
+                annotation.y1 !== undefined &&
+                annotation.y2 !== undefined
+              ) {
                 return (
                   <ReferenceArea
                     key={annotation.id}
@@ -339,17 +377,21 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
       {/* Annotation List */}
       {annotations.length > 0 && (
         <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-          <h4 className="text-sm font-medium mb-2">Annotations ({annotations.length})</h4>
+          <h4 className="text-sm font-medium mb-2">
+            Annotations ({annotations.length})
+          </h4>
           <div className="space-y-2 max-h-32 overflow-y-auto">
             {annotations.map((annotation) => (
-              <div 
+              <div
                 key={annotation.id}
                 className={`flex items-center justify-between p-2 rounded text-xs ${
-                  selectedAnnotation === annotation.id ? 'bg-primary/20' : 'bg-background'
+                  selectedAnnotation === annotation.id
+                    ? "bg-primary/20"
+                    : "bg-background"
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: annotation.color }}
                   />
@@ -361,7 +403,7 @@ const AnnotatedChart: React.FC<AnnotatedChartProps> = ({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => {
-                      const newLabel = prompt('Edit label:', annotation.label);
+                      const newLabel = prompt("Edit label:", annotation.label);
                       if (newLabel !== null) {
                         updateAnnotation(annotation, { label: newLabel });
                       }

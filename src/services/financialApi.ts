@@ -1,5 +1,5 @@
-// API service for financial data integration
-// Supports multiple data sources and standardized response format
+// Simplified API service for financial data
+// Primary: Alpha Vantage API | Fallback: Yahoo Finance API
 
 export interface StockData {
   symbol: string;
@@ -18,6 +18,13 @@ export interface StockData {
   timestamp: Date;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  timestamp: Date;
+}
+
 export interface CryptoData {
   symbol: string;
   name?: string;
@@ -26,162 +33,66 @@ export interface CryptoData {
   changePercent: number;
   volume?: number;
   marketCap?: number;
-  high24h?: number;
-  low24h?: number;
   timestamp: Date;
 }
 
 export interface MarketData {
   indices: {
-    sp500: { value: number; change: number; changePercent: number };
-    nasdaq: { value: number; change: number; changePercent: number };
-    dow: { value: number; change: number; changePercent: number };
+    [key: string]: {
+      value: number;
+      change: number;
+      changePercent: number;
+    };
   };
-  sectors: Array<{
-    name: string;
-    change: number;
-    changePercent: number;
-  }>;
   timestamp: Date;
 }
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  timestamp: Date;
-}
-
-export interface ApiConfig {
-  baseUrl: string;
-  apiKey?: string;
-  rateLimitPerMinute?: number;
-  timeout?: number;
-}
-
-// Predefined API configurations
-export const API_CONFIGS = {
-  // Alpha Vantage (free tier available)
-  alphaVantage: {
-    baseUrl: "https://www.alphavantage.co/query",
-    rateLimitPerMinute: 5,
-    timeout: 10000,
-    // Note: Requires API key - users can get free key from alphavantage.co
-  },
-
-  // Yahoo Finance Alternative (no key required)
-  yahooFinance: {
-    baseUrl: "https://query1.finance.yahoo.com/v8/finance/chart",
-    rateLimitPerMinute: 200,
-    timeout: 10000,
-  },
-
-  // IEX Cloud (free tier available)
-  iexCloud: {
-    baseUrl: "https://cloud.iexapis.com/stable",
-    rateLimitPerMinute: 100,
-    timeout: 10000,
-    // Note: Requires API key - users can get free key from iexcloud.io
-  },
-
-  // Finnhub (free tier available)
-  finnhub: {
-    baseUrl: "https://finnhub.io/api/v1",
-    rateLimitPerMinute: 60,
-    timeout: 10000,
-    // Note: Requires API key - users can get free key from finnhub.io
-  },
-
-  // Mock API for testing
-  mockApi: {
-    baseUrl: "https://jsonplaceholder.typicode.com",
-    rateLimitPerMinute: 1000,
-    timeout: 5000,
-  },
-};
 
 class FinancialApiService {
-  // Finnhub fetch via Next.js API route (CORS-free)
-  // Finnhub fetch via Next.js API route (CORS-free)
-  async fetchFinnhub(symbol: string): Promise<ApiResponse<StockData>> {
-    const url = `/api/stock-finnhub/${symbol}`;
-    try {
-      const response = await this.makeRequest(url);
-      if (!response.success || !response.data) {
-        return response as ApiResponse<StockData>;
-      }
-      const apiResponse = response.data as { success: boolean; data: StockData; error?: string };
-      if (!apiResponse.success) {
-        throw new Error(apiResponse.error || 'API returned unsuccessful response');
-      }
-      return {
-        success: true,
-        data: apiResponse.data,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch Finnhub data',
-        timestamp: new Date(),
-      };
-    }
-  }
+  private alphaVantageRequestCount = 0;
+  private alphaVantageResetTime = Date.now() + 60000; // Reset every minute
+  private readonly ALPHA_VANTAGE_RATE_LIMIT = 5; // 5 requests per minute
 
-  // IndianAPI fetch via Next.js API route (CORS-free)
-  async fetchIndianApi(symbol: string): Promise<ApiResponse<StockData>> {
-    const url = `/api/stock-indianapi/${symbol}`;
-    try {
-      const response = await this.makeRequest(url);
-      if (!response.success || !response.data) {
-        return response as ApiResponse<StockData>;
-      }
-      const apiResponse = response.data as { success: boolean; data: StockData; error?: string };
-      if (!apiResponse.success) {
-        throw new Error(apiResponse.error || 'API returned unsuccessful response');
-      }
-      return {
-        success: true,
-        data: apiResponse.data,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch IndianAPI data',
-        timestamp: new Date(),
-      };
-    }
-  }
-  private config: ApiConfig;
-  private requestCount = 0;
-  private resetTime = Date.now() + 60000; // Reset every minute
-
-  constructor(config: ApiConfig) {
-    this.config = config;
-  }
-
-  // Alpha Vantage fetch via Next.js API route (CORS-free)
-  async fetchAlphaVantage(symbol: string): Promise<ApiResponse<StockData>> {
-    const url = `/api/stock-alpha-vantage/${symbol}`;
-    try {
-      const response = await this.makeRequest(url);
-      if (!response.success || !response.data) {
-        return response as ApiResponse<StockData>;
-      }
-      const apiResponse = response.data as {
-        success: boolean;
-        data: StockData;
-        error?: string;
-      };
-      if (!apiResponse.success) {
+  // Alpha Vantage API (Primary) - via Next.js API route
+  private async fetchAlphaVantage(
+    symbol: string
+  ): Promise<ApiResponse<StockData>> {
+    // Check rate limit for Alpha Vantage
+    if (this.alphaVantageRequestCount >= this.ALPHA_VANTAGE_RATE_LIMIT) {
+      if (Date.now() < this.alphaVantageResetTime) {
         throw new Error(
-          apiResponse.error || "API returned unsuccessful response"
+          "Alpha Vantage rate limit exceeded, switching to Yahoo Finance"
+        );
+      } else {
+        this.alphaVantageRequestCount = 0;
+        this.alphaVantageResetTime = Date.now() + 60000;
+      }
+    }
+
+    try {
+      this.alphaVantageRequestCount++;
+
+      const url = `/api/stock-alpha-vantage/${symbol}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      });
+
+      if (!response.ok) {
+        throw new Error(`Alpha Vantage API responded with ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success || !data.data) {
+        throw new Error(
+          data.error || "Alpha Vantage API returned unsuccessful response"
         );
       }
+
       return {
         success: true,
-        data: apiResponse.data,
+        data: data.data,
         timestamp: new Date(),
       };
     } catch (error) {
@@ -196,91 +107,33 @@ class FinancialApiService {
     }
   }
 
-  private async makeRequest<T>(
-    url: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  // Yahoo Finance API (Fallback) - via Next.js API route
+  private async fetchYahooFinance(
+    symbol: string
+  ): Promise<ApiResponse<StockData>> {
     try {
-      // Rate limiting check
-      if (this.requestCount >= (this.config.rateLimitPerMinute || 100)) {
-        if (Date.now() < this.resetTime) {
-          throw new Error(
-            "Rate limit exceeded. Please wait before making more requests."
-          );
-        } else {
-          this.requestCount = 0;
-          this.resetTime = Date.now() + 60000;
-        }
-      }
-
-      this.requestCount++;
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        this.config.timeout || 10000
-      );
-
+      const url = `/api/stock/${symbol}`;
       const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(10000), // 10 second timeout
       });
 
-      clearTimeout(timeoutId);
-
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Yahoo Finance API responded with ${response.status}`);
       }
 
       const data = await response.json();
 
-      return {
-        success: true,
-        data,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      console.error("API request failed:", error);
-
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-        timestamp: new Date(),
-      };
-    }
-  }
-
-  // Yahoo Finance implementation via Next.js API route (CORS-free)
-  async fetchYahooFinance(symbol: string): Promise<ApiResponse<StockData>> {
-    const url = `/api/stock/${symbol}`;
-
-    try {
-      const response = await this.makeRequest(url);
-
-      if (!response.success || !response.data) {
-        return response as ApiResponse<StockData>;
-      }
-
-      const apiResponse = response.data as {
-        success: boolean;
-        data: StockData;
-        error?: string;
-      };
-
-      if (!apiResponse.success) {
+      if (!data.success || !data.data) {
         throw new Error(
-          apiResponse.error || "API returned unsuccessful response"
+          data.error || "Yahoo Finance API returned unsuccessful response"
         );
       }
 
       return {
         success: true,
-        data: apiResponse.data,
+        data: data.data,
         timestamp: new Date(),
       };
     } catch (error) {
@@ -295,234 +148,7 @@ class FinancialApiService {
     }
   }
 
-  // Mock API for development/testing
-  async fetchMockData(symbol: string): Promise<ApiResponse<StockData>> {
-    try {
-      // Simulate API delay
-      await new Promise((resolve) =>
-        setTimeout(resolve, 500 + Math.random() * 1000)
-      );
-
-      // Generate realistic mock data
-      const basePrice = Math.random() * 1000 + 50;
-      const change = (Math.random() - 0.5) * 20;
-      const changePercent = (change / basePrice) * 100;
-
-      const stockData: StockData = {
-        symbol: symbol.toUpperCase(),
-        name: `${symbol.toUpperCase()} Company Inc.`,
-        price: basePrice,
-        change,
-        changePercent,
-        volume: Math.floor(Math.random() * 10000000),
-        marketCap: Math.floor(Math.random() * 1000000000000),
-        high52Week: basePrice * (1 + Math.random() * 0.5),
-        low52Week: basePrice * (1 - Math.random() * 0.5),
-        dayHigh: basePrice * (1 + Math.random() * 0.1),
-        dayLow: basePrice * (1 - Math.random() * 0.1),
-        openPrice: basePrice * (1 + (Math.random() - 0.5) * 0.05),
-        previousClose: basePrice - change,
-        timestamp: new Date(),
-      };
-
-      return {
-        success: true,
-        data: stockData,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Mock API error",
-        timestamp: new Date(),
-      };
-    }
-  }
-
-  // Generic fetch method that can be extended for other APIs
-  async fetchStockData(
-    symbol: string,
-    apiType: "yahoo" | "alphaVantage" | "finnhub" | "indianapi" | "mock" = "mock"
-  ): Promise<ApiResponse<StockData>> {
-    // Auto-select provider based on symbol
-    if (symbol.endsWith('.BSE')) {
-      return this.fetchAlphaVantage(symbol);
-    } else if (symbol.endsWith('.NS')) {
-      return this.fetchFinnhub(symbol);
-    } else if (symbol.endsWith('.BO')) {
-      return this.fetchIndianApi(symbol);
-    }
-    switch (apiType) {
-      case "yahoo":
-        return this.fetchYahooFinance(symbol);
-      case "alphaVantage":
-        return this.fetchAlphaVantage(symbol);
-      case "finnhub":
-        return this.fetchFinnhub(symbol);
-      case "indianapi":
-        return this.fetchIndianApi(symbol);
-      case "mock":
-      default:
-        return this.fetchMockData(symbol);
-    }
-  }
-
-  // Fetch multiple stocks
-  async fetchMultipleStocks(
-    symbols: string[],
-    apiType: "yahoo" | "mock" = "mock"
-  ): Promise<ApiResponse<StockData[]>> {
-    try {
-      const promises = symbols.map((symbol) =>
-        this.fetchStockData(symbol, apiType)
-      );
-      const results = await Promise.allSettled(promises);
-
-      const successfulResults: StockData[] = [];
-      const errors: string[] = [];
-
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled" && result.value.success) {
-          successfulResults.push(result.value.data!);
-        } else {
-          const error =
-            result.status === "rejected"
-              ? result.reason?.message || "Unknown error"
-              : result.value.error || "API error";
-          errors.push(`${symbols[index]}: ${error}`);
-        }
-      });
-
-      if (successfulResults.length === 0) {
-        return {
-          success: false,
-          error: `All requests failed: ${errors.join(", ")}`,
-          timestamp: new Date(),
-        };
-      }
-
-      return {
-        success: true,
-        data: successfulResults,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch multiple stocks",
-        timestamp: new Date(),
-      };
-    }
-  }
-
-  // Public API methods that hooks will use
-  async getStockQuote(
-    symbol: string,
-    apiType: "yahoo" | "alphaVantage" | "finnhub" | "indianapi" | "mock" = "yahoo"
-  ): Promise<StockData> {
-    // Auto-select provider for Indian stocks
-    let effectiveApiType = apiType;
-    if (symbol.endsWith('.BSE')) effectiveApiType = 'alphaVantage';
-    else if (symbol.endsWith('.NS')) effectiveApiType = 'finnhub';
-    else if (symbol.endsWith('.BO')) effectiveApiType = 'indianapi';
-    
-    try {
-      const response = await this.fetchStockData(symbol, effectiveApiType);
-      if (!response.success || !response.data) {
-        // Instead of throwing, return mock data to prevent component crashes
-        console.warn(`Failed to fetch real data for ${symbol}, using mock data:`, response.error);
-        return this.generateMockStockData(symbol);
-      }
-      return response.data;
-    } catch (error) {
-      // Fallback to mock data instead of throwing
-      console.warn(`API error for ${symbol}, using mock data:`, error);
-      return this.generateMockStockData(symbol);
-    }
-  }
-
-  async getCryptoQuote(symbol: string): Promise<CryptoData> {
-    // Use API route for crypto data
-    try {
-      const response = await this.makeRequest("/api/crypto");
-      if (!response.success || !response.data) {
-        throw new Error(response.error || "Failed to fetch crypto data");
-      }
-
-      const apiResponse = response.data as {
-        success: boolean;
-        data: CryptoData[];
-        error?: string;
-      };
-      if (!apiResponse.success) {
-        throw new Error(
-          apiResponse.error || "API returned unsuccessful response"
-        );
-      }
-
-      // Find the specific crypto or return the first one
-      const crypto =
-        apiResponse.data.find(
-          (c) => c.symbol.toUpperCase() === symbol.toUpperCase()
-        ) || apiResponse.data[0];
-      if (crypto) {
-        return crypto;
-      } else {
-        throw new Error(`Crypto ${symbol} not found`);
-      }
-    } catch (error) {
-      // Fallback to mock data
-      console.warn(
-        "Failed to fetch crypto data from API, using mock data:",
-        error
-      );
-      return this.generateMockCryptoData(symbol);
-    }
-  }
-
-  async getMarketOverview(): Promise<MarketData> {
-    // Use API route for market data
-    try {
-      const response = await this.makeRequest("/api/market");
-      if (!response.success || !response.data) {
-        throw new Error(response.error || "Failed to fetch market data");
-      }
-
-      const apiResponse = response.data as {
-        success: boolean;
-        data: MarketData;
-        error?: string;
-      };
-      if (!apiResponse.success) {
-        throw new Error(
-          apiResponse.error || "API returned unsuccessful response"
-        );
-      }
-
-      return apiResponse.data;
-    } catch (error) {
-      // Fallback to mock data
-      console.warn(
-        "Failed to fetch market data from API, using mock data:",
-        error
-      );
-      return this.generateMockMarketData();
-    }
-  }
-
-  async getMultipleStocks(symbols: string[]): Promise<StockData[]> {
-    const apiType = this.config.baseUrl?.includes("mock") ? "mock" : "yahoo";
-    const response = await this.fetchMultipleStocks(symbols, apiType);
-    if (!response.success || !response.data) {
-      throw new Error(response.error || "Failed to fetch multiple stocks");
-    }
-    return response.data;
-  }
-
-  // Mock data generators
+  // Generate mock data as last resort
   private generateMockStockData(symbol: string): StockData {
     const basePrice = Math.random() * 1000 + 50;
     const change = (Math.random() - 0.5) * 20;
@@ -546,95 +172,142 @@ class FinancialApiService {
     };
   }
 
+  // Generate mock crypto data
   private generateMockCryptoData(symbol: string): CryptoData {
-    const basePrice = Math.random() * 50000 + 1000;
-    const change = (Math.random() - 0.5) * basePrice * 0.1;
+    const basePrice = Math.random() * 50000 + 100;
+    const change = (Math.random() - 0.5) * 2000;
     const changePercent = (change / basePrice) * 100;
 
     return {
       symbol: symbol.toUpperCase(),
-      name: `${symbol.charAt(0).toUpperCase() + symbol.slice(1)} Coin`,
+      name: `${symbol.toUpperCase()} Cryptocurrency`,
       price: basePrice,
       change,
       changePercent,
-      volume: Math.random() * 1000000000,
-      marketCap: basePrice * 21000000,
-      high24h: basePrice + Math.random() * basePrice * 0.05,
-      low24h: basePrice - Math.random() * basePrice * 0.05,
+      volume: Math.floor(Math.random() * 1000000000),
+      marketCap: Math.floor(Math.random() * 500000000000),
       timestamp: new Date(),
     };
   }
 
+  // Generate mock market data
   private generateMockMarketData(): MarketData {
     return {
       indices: {
-        sp500: {
-          value: 4200 + Math.random() * 400,
-          change: (Math.random() - 0.5) * 100,
-          changePercent: (Math.random() - 0.5) * 3,
-        },
-        nasdaq: {
-          value: 13000 + Math.random() * 1000,
-          change: (Math.random() - 0.5) * 200,
-          changePercent: (Math.random() - 0.5) * 4,
-        },
-        dow: {
-          value: 34000 + Math.random() * 2000,
-          change: (Math.random() - 0.5) * 300,
+        SP500: {
+          value: 4500 + Math.random() * 200,
+          change: (Math.random() - 0.5) * 50,
           changePercent: (Math.random() - 0.5) * 2,
+        },
+        NASDAQ: {
+          value: 15000 + Math.random() * 500,
+          change: (Math.random() - 0.5) * 100,
+          changePercent: (Math.random() - 0.5) * 2,
+        },
+        DOW: {
+          value: 35000 + Math.random() * 1000,
+          change: (Math.random() - 0.5) * 200,
+          changePercent: (Math.random() - 0.5) * 1.5,
         },
       },
-      sectors: [
-        {
-          name: "Technology",
-          change: (Math.random() - 0.5) * 50,
-          changePercent: (Math.random() - 0.5) * 3,
-        },
-        {
-          name: "Healthcare",
-          change: (Math.random() - 0.5) * 30,
-          changePercent: (Math.random() - 0.5) * 2,
-        },
-        {
-          name: "Financial",
-          change: (Math.random() - 0.5) * 40,
-          changePercent: (Math.random() - 0.5) * 2.5,
-        },
-        {
-          name: "Energy",
-          change: (Math.random() - 0.5) * 60,
-          changePercent: (Math.random() - 0.5) * 4,
-        },
-        {
-          name: "Consumer",
-          change: (Math.random() - 0.5) * 35,
-          changePercent: (Math.random() - 0.5) * 2.2,
-        },
-      ],
       timestamp: new Date(),
     };
   }
-}
 
-// Factory function to create API service instances
-export function createApiService(
-  configName: keyof typeof API_CONFIGS,
-  apiKey?: string
-): FinancialApiService {
-  const config: ApiConfig = { ...API_CONFIGS[configName] };
-  if (apiKey) {
-    config.apiKey = apiKey;
+  // Main method: Try Alpha Vantage first, fallback to Yahoo Finance, then mock data
+  async getStockQuote(symbol: string): Promise<StockData> {
+    try {
+      // Try Alpha Vantage first
+      console.log(`Attempting to fetch ${symbol} from Alpha Vantage...`);
+      const alphaVantageResponse = await this.fetchAlphaVantage(symbol);
+
+      if (alphaVantageResponse.success && alphaVantageResponse.data) {
+        console.log(`✅ Successfully fetched ${symbol} from Alpha Vantage`);
+        return alphaVantageResponse.data;
+      }
+
+      // Fallback to Yahoo Finance
+      console.log(
+        `⚠️ Alpha Vantage failed for ${symbol}, trying Yahoo Finance...`
+      );
+      const yahooResponse = await this.fetchYahooFinance(symbol);
+
+      if (yahooResponse.success && yahooResponse.data) {
+        console.log(`✅ Successfully fetched ${symbol} from Yahoo Finance`);
+        return yahooResponse.data;
+      }
+
+      // Last resort: mock data
+      console.warn(`⚠️ Both APIs failed for ${symbol}, using mock data`);
+      return this.generateMockStockData(symbol);
+    } catch (error) {
+      console.warn(`❌ All APIs failed for ${symbol}, using mock data:`, error);
+      return this.generateMockStockData(symbol);
+    }
   }
-  return new FinancialApiService(config);
+
+  // Crypto quote method (simplified - returns mock data)
+  async getCryptoQuote(symbol: string): Promise<CryptoData> {
+    try {
+      // For now, return mock data - could be extended to use real crypto APIs
+      console.log(`Generating mock crypto data for ${symbol}`);
+      return this.generateMockCryptoData(symbol);
+    } catch (error) {
+      console.warn(
+        `❌ Failed to fetch crypto data for ${symbol}, using mock data:`,
+        error
+      );
+      return this.generateMockCryptoData(symbol);
+    }
+  }
+
+  // Market overview method (simplified - returns mock data)
+  async getMarketOverview(): Promise<MarketData> {
+    try {
+      // For now, return mock data - could be extended to use real market APIs
+      console.log("Generating mock market overview data");
+      return this.generateMockMarketData();
+    } catch (error) {
+      console.warn("❌ Failed to fetch market data, using mock data:", error);
+      return this.generateMockMarketData();
+    }
+  }
+
+  // Fetch multiple stocks with rate limiting
+  async getMultipleStocks(symbols: string[]): Promise<StockData[]> {
+    const results: StockData[] = [];
+
+    // Process in small batches to respect rate limits
+    const batchSize = 3;
+    for (let i = 0; i < symbols.length; i += batchSize) {
+      const batch = symbols.slice(i, i + batchSize);
+
+      try {
+        const batchPromises = batch.map((symbol) => this.getStockQuote(symbol));
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+
+        // Delay between batches to respect rate limits
+        if (i + batchSize < symbols.length) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      } catch (error) {
+        console.error("Batch processing error:", error);
+        // Add mock data for failed batch
+        batch.forEach((symbol) => {
+          results.push(this.generateMockStockData(symbol));
+        });
+      }
+    }
+
+    return results;
+  }
 }
 
-// Default service instance for easy use
-export const defaultApiService = createApiService("yahooFinance");
+// Create and export the service instance
+export const financialApi = new FinancialApiService();
 
-// Main API service for easy import
-export const financialApi = defaultApiService;
-
-// Utility function to format currency
+// Utility functions
 export function formatCurrency(value: number, currency = "USD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -644,13 +317,11 @@ export function formatCurrency(value: number, currency = "USD"): string {
   }).format(value);
 }
 
-// Utility function to format percentage
 export function formatPercentage(value: number): string {
   const sign = value >= 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;
 }
 
-// Utility function to format large numbers
 export function formatLargeNumber(value: number): string {
   if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
   if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;

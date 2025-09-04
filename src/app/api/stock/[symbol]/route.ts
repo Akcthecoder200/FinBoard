@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
@@ -9,31 +9,34 @@ export async function GET(
   try {
     // Clean and format symbol for Yahoo Finance
     let formattedSymbol = symbol.toUpperCase();
-    
+
     // Handle special cases for symbol formatting
-    if (formattedSymbol.includes(' ')) {
+    if (formattedSymbol.includes(" ")) {
       // Replace spaces with appropriate formatting for Yahoo Finance
-      formattedSymbol = formattedSymbol.replace(/\s+/g, '-');
+      formattedSymbol = formattedSymbol.replace(/\s+/g, "-");
     }
-    
+
     // Use Yahoo Finance API as a proxy
     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${formattedSymbol}`;
-    
+
     const response = await fetch(yahooUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       },
     });
 
     if (!response.ok) {
       // Return a structured error response instead of throwing
-      console.warn(`Yahoo Finance API responded with ${response.status} for symbol: ${symbol}`);
-      
+      console.warn(
+        `Yahoo Finance API responded with ${response.status} for symbol: ${symbol}`
+      );
+
       return NextResponse.json(
         {
           success: false,
           error: `Stock symbol "${symbol}" not found or unavailable`,
-          code: 'SYMBOL_NOT_FOUND',
+          code: "SYMBOL_NOT_FOUND",
           timestamp: new Date().toISOString(),
         },
         { status: 404 }
@@ -41,20 +44,21 @@ export async function GET(
     }
 
     const data = await response.json();
-    
+
     // Extract the financial data
     const chart = data.chart;
     const result = chart?.result?.[0];
-    
+
     if (!result) {
-      throw new Error('Invalid response format from Yahoo Finance');
+      throw new Error("Invalid response format from Yahoo Finance");
     }
 
     const meta = result.meta;
     const currentPrice = meta?.regularMarketPrice || meta?.previousClose || 0;
     const previousClose = meta?.previousClose || 0;
     const change = currentPrice - previousClose;
-    const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+    const changePercent =
+      previousClose > 0 ? (change / previousClose) * 100 : 0;
 
     // Format the response to match our StockData interface
     const stockData = {
@@ -79,14 +83,14 @@ export async function GET(
       data: stockData,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error('Stock API error:', error);
-    
+    console.error("Stock API error:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch stock data',
+        error:
+          error instanceof Error ? error.message : "Failed to fetch stock data",
         timestamp: new Date().toISOString(),
       },
       { status: 500 }

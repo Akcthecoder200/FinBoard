@@ -1,4 +1,4 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -38,7 +38,8 @@ class ErrorBoundary extends Component<Props, State> {
         <div className="p-4 border border-red-200 rounded-lg bg-red-50">
           <h3 className="text-red-800 font-medium mb-2">Component Error</h3>
           <p className="text-red-600 text-sm">
-            Something went wrong loading this component. Please refresh the page.
+            Something went wrong loading this component. Please refresh the
+            page.
           </p>
           <details className="mt-2">
             <summary className="text-xs text-red-500 cursor-pointer">
