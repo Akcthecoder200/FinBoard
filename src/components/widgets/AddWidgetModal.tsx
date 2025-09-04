@@ -15,7 +15,7 @@ interface WidgetFormData {
   symbol: string;
   symbols: string[];
   refreshInterval: number;
-  displayType: "stock" | "crypto" | "market-overview" | "portfolio" | "chart";
+  displayType: "stock" | "crypto" | "market-overview" | "portfolio" | "chart" | "table";
   selectedFields: string[];
   description: string;
 }
@@ -107,6 +107,11 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
       case "portfolio":
         baseConfig.symbols = formData.symbols;
         break;
+      case "table":
+        baseConfig.symbols = formData.symbols.length > 0 ? formData.symbols : undefined;
+        baseConfig.pageSize = 10;
+        baseConfig.showFilters = true;
+        break;
       case "market-overview":
         // No additional config needed
         break;
@@ -154,6 +159,9 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
             formData.symbols.length > 0 &&
             formData.symbols.every((s) => s.trim().length > 0)
           );
+        }
+        if (formData.displayType === "table") {
+          return true; // Table can work with default symbols or custom symbols
         }
         return true; // market-overview doesn't need additional validation
       case 3:
@@ -398,6 +406,32 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                 </div>
               )}
 
+              {formData.displayType === "table" && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Table Symbols (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.symbols.join(", ")}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "symbols",
+                        e.target.value
+                          .split(",")
+                          .map((s) => s.trim().toUpperCase())
+                          .filter(s => s.length > 0)
+                      )
+                    }
+                    placeholder="AAPL, GOOGL, MSFT, TSLA (leave empty for default list)"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter specific stock symbols for the table, or leave empty to use a default list of popular stocks
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Refresh Interval
@@ -489,6 +523,12 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
                       icon: "📊",
                       title: "Interactive Chart",
                       desc: "Price charts & analysis",
+                    },
+                    {
+                      type: "table",
+                      icon: "📋",
+                      title: "Stock Table",
+                      desc: "Sortable data grid",
                     },
                   ].map((option) => (
                     <button

@@ -2,19 +2,82 @@
 
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
-import { removeWidget, clearAllWidgets } from '@/store/slices/widgetsSlice';
-import { WidgetCard } from './WidgetCard';
+import { removeWidget, clearAllWidgets, reorderWidgets } from '@/store/slices/widgetsSlice';
+import CustomizableWidgetCard from './CustomizableWidgetCard';
 import { AddWidgetModal } from './AddWidgetModal';
 import { useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { Widget } from '@/store/slices/widgetsSlice';
 
 interface WidgetContainerProps {
   className?: string;
+}
+
+// Sortable wrapper component for individual widgets
+function SortableWidget({ id, widget, onRemove }: { id: string; widget: Widget; onRemove: () => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <div className="relative group">
+        {/* Drag Handle */}
+        <div
+          {...listeners}
+          className="absolute top-2 right-12 z-10 p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+          title="Drag to reorder"
+        >
+          <svg className="w-4 h-4 text-muted-foreground hover:text-foreground" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"></path>
+          </svg>
+        </div>
+        <CustomizableWidgetCard widget={widget} onRemove={onRemove} />
+      </div>
+    </div>
+  );
 }
 
 export function WidgetContainer({ className = '' }: WidgetContainerProps) {
   const dispatch = useDispatch();
   const widgets = useSelector((state: RootState) => state.widgets.widgets);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleRemoveWidget = (widgetId: string) => {
     dispatch(removeWidget(widgetId));
@@ -23,6 +86,18 @@ export function WidgetContainer({ className = '' }: WidgetContainerProps) {
   const handleClearAll = () => {
     if (confirm('Are you sure you want to remove all widgets? This action cannot be undone.')) {
       dispatch(clearAllWidgets());
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = widgets.findIndex((widget) => widget.id === active.id);
+      const newIndex = widgets.findIndex((widget) => widget.id === over?.id);
+
+      const newOrder = arrayMove(widgets, oldIndex, newIndex);
+      dispatch(reorderWidgets(newOrder));
     }
   };
 
@@ -74,23 +149,35 @@ export function WidgetContainer({ className = '' }: WidgetContainerProps) {
           </button>
         </div>
       ) : (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-foreground">Active Widgets ({widgets.length})</h4>
-            <div className="text-sm text-muted-foreground">
-              Drag and drop coming in next step
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-semibold text-foreground">Active Widgets ({widgets.length})</h4>
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"></path>
+                </svg>
+                Drag to reorder widgets
+              </div>
             </div>
+            <SortableContext items={widgets.map(w => w.id)} strategy={verticalListSortingStrategy}>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {widgets.map((widget) => (
+                  <SortableWidget
+                    key={widget.id}
+                    id={widget.id}
+                    widget={widget}
+                    onRemove={() => handleRemoveWidget(widget.id)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {widgets.map((widget) => (
-              <WidgetCard
-                key={widget.id}
-                widget={widget}
-                onRemove={() => handleRemoveWidget(widget.id)}
-              />
-            ))}
-          </div>
-        </div>
+        </DndContext>
       )}
 
       {/* Widget Statistics */}

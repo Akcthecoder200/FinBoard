@@ -3,6 +3,7 @@
 import { Widget } from "@/store/slices/widgetsSlice";
 import { useWidgetData } from "@/hooks/useFinancialData";
 import ChartWidget from "./ChartWidget";
+import TableWidget from "./TableWidget";
 import {
   formatCurrency,
   formatPercentage,
@@ -70,6 +71,8 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
         return "💼";
       case "chart":
         return "📊";
+      case "table":
+        return "📋";
       default:
         return "📋";
     }
@@ -94,6 +97,9 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
         return `Interactive chart for ${
           (widget.config?.symbol as string) || "symbol"
         }`;
+      case "table":
+        const tableSymbols = widget.config?.symbols as string[];
+        return `Stock table with ${tableSymbols?.length || 'default'} symbols`;
       default:
         return "Custom financial widget";
     }
@@ -397,6 +403,16 @@ export function WidgetCard({ widget, onRemove }: WidgetCardProps) {
             }
             height={300}
             refreshInterval={60000}
+          />
+        );
+      case "table":
+        return (
+          <TableWidget
+            symbols={widget.config?.symbols as string[]}
+            height={(widget.config?.height as number) || 400}
+            pageSize={(widget.config?.pageSize as number) || 10}
+            showFilters={(widget.config?.showFilters as boolean) ?? true}
+            title={widget.title}
           />
         );
       default:
