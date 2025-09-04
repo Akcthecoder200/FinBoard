@@ -183,10 +183,10 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] flex flex-col">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
               Add New Widget
@@ -216,7 +216,7 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
         </div>
 
         {/* Progress Steps */}
-        <div className="px-6 py-4 bg-secondary/20 flex-shrink-0">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-secondary/20 flex-shrink-0">
           <div className="flex items-center justify-between">
             {Array.from({ length: totalSteps }, (_, i) => (
               <div key={i} className="flex items-center">
@@ -252,7 +252,7 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 overflow-y-auto flex-1 min-h-0">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0">
           {/* Step 1: Widget Details */}
           {currentStep === 1 && (
             <div className="space-y-6">
@@ -684,22 +684,22 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-border flex-shrink-0 bg-card">
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-2 p-4 sm:p-6 border-t border-border flex-shrink-0 bg-card">
+          <div className="flex gap-2 order-2 sm:order-1">
             {currentStep > 1 && (
               <button
                 onClick={handlePrevious}
-                className="px-4 py-2 text-muted-foreground hover:text-foreground border border-border rounded-lg hover:bg-secondary transition-colors"
+                className="flex-1 sm:flex-none px-4 py-2 text-muted-foreground hover:text-foreground border border-border rounded-lg hover:bg-secondary transition-colors"
               >
                 Previous
               </button>
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 order-1 sm:order-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               Cancel
             </button>
@@ -707,14 +707,14 @@ export function AddWidgetModal({ isOpen, onClose }: AddWidgetModalProps) {
               <button
                 onClick={handleNext}
                 disabled={!isStepValid()}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 sm:flex-none px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
             ) : (
               <button
                 onClick={handleSubmit}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                className="flex-1 sm:flex-none px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Add Widget
               </button>
