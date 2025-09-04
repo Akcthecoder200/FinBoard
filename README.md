@@ -2,7 +2,7 @@
 
 > **A modern, real-time financial dashboard built with Next.js 15 and React 19**
 
-![FinBoard Preview](https://via.placeholder.com/800x400/1f2937/ffffff?text=FinBoard+Dashboard)
+
 
 [![Vercel Deploy](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Akcthecoder200/FinBoard)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black)](https://nextjs.org/)
@@ -10,7 +10,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.17-38bdf8)](https://tailwindcss.com/)
 
-🔗 **Live Demo:** [FinBoard on Vercel](https://finboard-your-deployment.vercel.app)
+🔗 **Live Demo:** [FinBoard on Vercel](https://fin-board-mocha.vercel.app/)
 
 ---
 
@@ -459,4 +459,5 @@ _FinBoard - Your Professional Financial Dashboard Solution_
 ⭐ **Star this repository if you find it helpful!** ⭐
 
 </div>
+
 
